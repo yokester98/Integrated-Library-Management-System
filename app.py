@@ -29,11 +29,11 @@ def payment():
 def admin():
     return render_template('Admin.html')
 
-@app.route("/success")
+@app.route("/Success.html")
 def success():
     return render_template('Success.html')
 
-@app.route("/fail")
+@app.route("/Fail.html")
 def fail():
     return render_template('Fail.html')
 
