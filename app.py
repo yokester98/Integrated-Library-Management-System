@@ -23,13 +23,20 @@ def simpleSearch():
 
 @app.route("/Search.html")
 def search():
-    headings = ("BookID", "Title", "ISBN", "Return Date")
-    data = (("123", "lala", "123456", "NULL"), ("456", "lalala", "123456789", "17/03/2021"))
     return render_template('Search.html', data = data)
 
 @app.route("/Result.html")
 def result():
-    return render_template('Result.html')
+
+    headings = ("BookID", "Title")
+
+    dataResult = {
+    ("BookID1", "BookTitle1"),
+    ("BookID2", "BookTitle2"),
+    ("BookID3", "BookTitle3"),
+    ("BookID4", "BookTitle4")
+    }
+    return render_template('Result.html', dataResult = dataResult)
 
 @app.route("/Manage.html")
 def manage():
