@@ -167,43 +167,36 @@
           <table class="u-table-entity u-table-entity-1">
             <colgroup>
               <col width="25%" />
-              <col width="25%" />
-              <col width="25%" />
-              <col width="25%" />
+              <col width="23.9%" />
+              <col width="25.9%" />
+              <col width="25.2%" />
             </colgroup>
-            <thead class="u-palette-4-base u-table-header u-table-header-1">
-              <tr style="height: 21px">
-                <th
-                  class="u-border-1 u-border-palette-4-base u-table-cell"
-                  spellcheck="false"
-                >
-                  BookID
-                </th>
-                <th
-                  class="u-border-1 u-border-palette-4-base u-table-cell"
-                  spellcheck="false"
-                >
-                  Title
-                </th>
-                <th
-                  class="u-border-1 u-border-palette-4-base u-table-cell"
-                  spellcheck="false"
-                >
-                  ISBN
-                </th>
-                <th
-                  class="u-border-1 u-border-palette-4-base u-table-cell"
-                  spellcheck="false"
-                >
-                  Return Date
-                </th>
+            <thead
+              class="u-custom-font u-font-courier-new u-palette-4-base u-table-header u-table-header-1"
+            >
+              <tr style="height: 58px">
+                <th class="u-table-cell">Book ID</th>
+                <th class="u-table-cell">Title</th>
               </tr>
             </thead>
-            <!--populate table from here-->
+            <tbody class="u-table-body">
+              {% for row in dataResult %}
+              <tr style="height: 55px">
+                {% for cell in row %}
+                <td
+                  class="u-border-1 u-border-grey-30 u-border-no-left u-border-no-right u-table-cell"
+                >
+                  {{ cell }}
+                </td>
+                {% endfor %}
+              </tr>
+              {% endfor %}
+            </tbody>
           </table>
         </div>
       </div>
     </section>
+
     <footer
       class="u-align-center u-clearfix u-footer u-grey-80 u-footer"
       id="sec-84a7"
