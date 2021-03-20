@@ -33,12 +33,21 @@ except Error as e:
 with open('./libbooks.json') as f:
     data = json.load(f)
 
-add_data = ("INSERT INTO libbooks(_id, title, isbn, pageCount, publishedDate, thumbnailUrl, shortDescription, longDescription, status, authors, categories) " \
-            "VALUES (%(_id)d, %(title)s, %(isbn)s, %(pageCount)d, %(publishedDate)s, %(thumbnailUrl)s, %(shortDescription)s, %(longDescription)s, %(status)s, %(authors)s, %(categories)s)")
+#insert data from libbooks.json to libbooks entity
+add_data_libbooks = ("INSERT INTO libbooks(_id, title, isbn, pageCount, publishedDate, thumbnailUrl, shortDescription, longDescription, status, authors, categories) " \
+                     "VALUES (%(_id)s, %(title)s, %(isbn)s, %(pageCount)s, %(publishedDate)s, %(thumbnailUrl)s, %(shortDescription)s, %(longDescription)s, %(status)s, %(authors)s, %(categories)s)")
 
 for row in data:
-    cursor.execute(add_data, row)
+    cursor.execute(add_data_libbooks, row)
     
+connection.commit()
+
+# insert data from libbooks entity to book entity
+query_add_data_book = ("INSERT INTO book(bookID, title, authors, category, datePublished) " \
+                       "SELECT _id, title, authors, categories, publishedDate FROM libbooks")
+
+cursor.execute(query_add_data_book)
+
 connection.commit()
 
 '''
@@ -82,13 +91,20 @@ def result():
 @app.route("/Manage.html")
 def manage():
     headings = ("BookID", "Status", "Due/Available Date", "Action")
-    sql_select_Query = "select * from Book"
+    data = []
+    sql_select_Query = "SELECT bookID, borrowedBy, reservedBy, returnDate, dueDate, borrowDate FROM Book WHERE borrowedBy = {0} OR reservedBy = {0}".format('''variable for userID, \
+                                                                                                                                                          to be updated by Jiashang''')
     cursor = connection.cursor()
     cursor.execute(sql_select_Query)
     # get all records
     records = cursor.fetchall()
     for row in records:
-        bookID, title, authors, category, publisher, year, userID, 
+        bookID, borrowedBy, reservedBy, returnDate, dueDate, borrowDate = row
+        if borrowedBy == '''variable for userID''':
+            status = "Borrowed"
+        else:
+            status = "Reserved"
+        data.append([bookID, status, dueDate])
     return render_template('Manage.html', data = data)
 
 @app.route("/Payment.html")
