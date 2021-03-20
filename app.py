@@ -92,15 +92,14 @@ def result():
 def manage():
     headings = ("BookID", "Status", "Due/Available Date", "Action")
     data = []
-    sql_select_Query = "SELECT bookID, borrowedBy, reservedBy, returnDate, dueDate, borrowDate FROM Book WHERE borrowedBy = {0} OR reservedBy = {0}".format('''variable for userID, \
-                                                                                                                                                          to be updated by Jiashang''')
+    sql_select_Query = "SELECT bookID, borrowedBy, reservedBy, dueDate FROM Book WHERE borrowedBy = {0} OR reservedBy = {0}".format(2)  # need to add jiashangs part here
     cursor = connection.cursor()
     cursor.execute(sql_select_Query)
     # get all records
     records = cursor.fetchall()
     for row in records:
-        bookID, borrowedBy, reservedBy, returnDate, dueDate, borrowDate = row
-        if borrowedBy == '''variable for userID''':
+        bookID, borrowedBy, reservedBy, dueDate = row
+        if borrowedBy == 2:       # need to add jiashangs part here
             status = "Borrowed"
         else:
             status = "Reserved"
