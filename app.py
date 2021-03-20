@@ -1,12 +1,53 @@
 # import dependencies
 from flask import Flask, render_template, redirect, url_for
 from pymongo import MongoClient
+import mysql.connector
+from mysql.connector import Error
+import pandas as pd
+import json
 
 app = Flask(__name__)
 
+# mongoDB connection
 mongodb = MongoClient('localhost', 27017)
 db = mongodb.bookcollection
 collection = db.book
+
+# mySQL connection
+try:
+    connection = mysql.connector.connect(host='localhost',
+                                         database='Library',
+                                         user='root',
+                                         password=input("type password for mySQL here: "))
+    if connection.is_connected():
+        db_Info = connection.get_server_info()
+        print("Connected to MySQL Server version ", db_Info)
+        cursor = connection.cursor()
+        cursor.execute("select database();")
+        record = cursor.fetchone()
+        print("You're connected to database: ", record)
+
+except Error as e:
+    print("Error while connecting to MySQL", e)
+
+with open('./libbooks.json') as f:
+    data = json.load(f)
+
+add_data = ("INSERT INTO libbooks(_id, title, isbn, pageCount, publishedDate, thumbnailUrl, shortDescription, longDescription, status, authors, categories) " \
+            "VALUES (%(_id)d, %(title)s, %(isbn)s, %(pageCount)d, %(publishedDate)s, %(thumbnailUrl)s, %(shortDescription)s, %(longDescription)s, %(status)s, %(authors)s, %(categories)s)")
+
+for row in data:
+    cursor.execute(add_data, row)
+    
+connection.commit()
+
+'''
+finally:
+    if connection.is_connected():
+        cursor.close()
+        connection.close()
+        print("MySQL connection is closed")
+'''
 
 @app.route("/")
 def main():
@@ -41,7 +82,13 @@ def result():
 @app.route("/Manage.html")
 def manage():
     headings = ("BookID", "Status", "Due/Available Date", "Action")
-    data = (("123", "Borrowed", "21/01/2021", "Return/Extend"), ("456", "Reserved", "16/03/2021", "Convert/Cancel"))
+    sql_select_Query = "select * from Book"
+    cursor = connection.cursor()
+    cursor.execute(sql_select_Query)
+    # get all records
+    records = cursor.fetchall()
+    for row in records:
+        bookID, title, authors, category, publisher, year, userID, 
     return render_template('Manage.html', data = data)
 
 @app.route("/Payment.html")
