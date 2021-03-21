@@ -122,6 +122,10 @@ def success():
 def fail():
     return render_template('Fail.html')
 
+@app.route("/Holding.html")
+def holding(ID, title, borrowed, reserved)
+    return render_template('Holding.html', bookID = ID, title = title, bool1 = borrowed, bool2 = reserved)
+
 # final line
 if __name__ == "__main__":
     app.run()
