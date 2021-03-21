@@ -94,6 +94,18 @@
                 {% for cell in row %}
                 <td class="u-border-1 u-border-grey-30 u-border-no-left u-border-no-right u-table-cell">{{ cell }}</td>
                 {% endfor %}
+                {% if row[1] == "Reserved" %}
+                <button class="u-border-1 u-border-grey-30 u-border-no-left u-border-no-right u-table-cell">Convert</button>
+                <script></script>
+                <button class="u-border-1 u-border-grey-30 u-border-no-left u-border-no-right u-table-cell">Cancel</button>
+                <script></script>
+                {% endif %}
+                {% if row[1] == "Borrowed" %}
+                <button class="u-border-1 u-border-grey-30 u-border-no-left u-border-no-right u-table-cell">Extend</button>
+                <script></script>
+                <button class="u-border-1 u-border-grey-30 u-border-no-left u-border-no-right u-table-cell">Return</button>
+                <script></script>
+                {% endif %}                
               </tr>
               {% endfor %}
             </tbody>
