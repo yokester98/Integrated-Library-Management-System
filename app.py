@@ -75,21 +75,28 @@ def simpleSearch():
     else:
         return render_template('Search.html')
 
-'''
-@app.route("/Search.html", methods=['POST'])
+
+@app.route("/Search.html",methods=['POST', "GET"])
 def search():
-    booktitle = request.form[
-    bookauthor = request.form[
-    bookcategory = request.form[
-    bookyearofpublish = request.form[
-    query = { "title" : {"$regex": booktitle, "$options" : "i"}, 
-        "authors" : {"$regex" : bookauthor, "$options" : "i"},
-        "categories" : {"$regex" : bookcategories, "$options" : "i"},
-        "publishedDate" : {"$regex" : bookyearofpublish, "$options" : "i"}}
-    data = collection.find(query, {"_id":1, "title":1})
-    listdata = list(data)
-    return render_template('Search.html', data = list(data))
-'''
+    if request.method == "POST":
+        keywords = request.form["name"]
+        print(keywords)
+        return redirect(url_for('result', keywords = keywords))
+    else: 
+        return render_template("Search.html")
+
+
+@app.route('/Result.html/<keywords>')
+def result(keywords):
+    print("result:" + keywords)
+    query = { "title" : { "$regex": keywords, "$options" : "i"}}
+    result_count = collection.count_documents(query)
+    print(query)
+    print(result_count)
+    dataResult = collection.find(query)
+
+    return render_template("Result.html")
+
 
 @app.route("/Result.html")
 def result(keywords):
