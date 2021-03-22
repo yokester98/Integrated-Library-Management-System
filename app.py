@@ -5,11 +5,8 @@ import mysql.connector
 from mysql.connector import Error
 import pandas as pd
 import json
-<<<<<<< Updated upstream
 import datetime
-=======
 from datetime import datetime, timedelta
->>>>>>> Stashed changes
 
 app = Flask(__name__)
 
