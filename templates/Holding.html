@@ -177,11 +177,11 @@
     <section>
       <p>
         {% if {{amount}} == 0 and {{num_borrowed}} < 4 and {{borrowed}} == "No" %}
-          <a href="Borrowed.html" class="btn btn-primary active" role="button" data-bs-toggle="button" aria-pressed="true">Borrow</a> 
+          <a href="Borrowed.html/{{bookID}}" class="btn btn-primary active" role="button" data-bs-toggle="button" aria-pressed="true">Borrow</a> 
         {% else %}
           <a href="Fail.html" class="btn btn-primary disabled" tabindex="-1" aria-disabled="true" role="button" data-bs-toggle="button">Borrow</a>
         {% if {{amount}} == 0 and {{reserved}} == "No" %}
-          <a href="Reserved.html" class="btn btn-primary active" role="button" data-bs-toggle="button" aria-pressed="true">Reserve</a> 
+          <a href="Reserved.html/{{bookID}}" class="btn btn-primary active" role="button" data-bs-toggle="button" aria-pressed="true">Reserve</a> 
         {% else %}
           <a href="Fail.html" class="btn btn-primary disabled" tabindex="-1" aria-disabled="true" role="button" data-bs-toggle="button">Reserve</a>
       </p>
