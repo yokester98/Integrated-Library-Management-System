@@ -179,12 +179,13 @@ def holding(ID, title, borrowed, reserved):
     return render_template('Holding.html', bookID = ID, title = title, bool1 = borrowed, bool2 = reserved)
 
 @app.route("/Borrow.html")
-def borrow(bookID, userID):
-    currDate = date.today().strftime('%d/%m/%Y')
-    dueDate = currDate + datetime.timedelta(days=14)
+def borrow(bookID):
+    currDate = date.today().strftime('%Y/%m/%d')
+    dueDate = currDate + datetime.timedelta(days=28)
+    cursor = connection.cursor()
+    # check whether book is borrowed
     # update borrow status of book
     sql_borrow_query = "UPDATE book SET borrowID=?, borrowDate=?, dueDate=? WHERE _id=?"
-    cursor = connection.cursor()
     cursor.execute(sql_borrow_query, (userID, currDate, dueDate, bookID))
     connection.commit()
     return render_template('Success.html')
