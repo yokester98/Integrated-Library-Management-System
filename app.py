@@ -5,6 +5,7 @@ import mysql.connector
 from mysql.connector import Error
 import pandas as pd
 import json
+import datetime
 
 app = Flask(__name__)
 
@@ -123,8 +124,26 @@ def fail():
     return render_template('Fail.html')
 
 @app.route("/Holding.html")
-def holding(ID, title, borrowed, reserved)
+def holding(ID, title, borrowed, reserved):
     return render_template('Holding.html', bookID = ID, title = title, bool1 = borrowed, bool2 = reserved)
+
+@app.route("/Borrow.html")
+def borrow(bookID, userID):
+    currDate = date.today().strftime('%d/%m/%Y')
+    dueDate = currDate + datetime.timedelta(days=14)
+    # update borrow status of book
+    sql_borrow_query = "UPDATE book SET borrowID=?, borrowDate=?, dueDate=? WHERE _id=?"
+    cursor = connection.cursor()
+    cursor.execute(sql_borrow_query, (userID, currDate, dueDate, bookID))
+    connection.commit()
+    
+@app.route("/Reserve.html")
+def reserve(bookID, userID):
+    # update reserve status of book
+    sql_reserve_query = "UPDATE book SET reserveID=? WHERE _id=?"
+    cursor = connection.cursor()
+    cursor.execute(sql_reserve_query, (userID, bookID))
+    connection.commit()
 
 # final line
 if __name__ == "__main__":
