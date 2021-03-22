@@ -68,27 +68,26 @@ def main():
 def main2():
     return render_template('Home.html')
 
-@app.route('/simpleSearch',methods=['POST'])
-def simpleSearch():
-    _keyword = request.form['u-border-1 u-border-grey-30 u-input u-input-rectangle u-white']
-    return collection.find({title : _keyword})
-
-@app.route("/Search.html")
+@app.route("/Search.html",methods=['POST', "GET"])
 def search():
-    return render_template('Search.html', data = data)
+    if request.method == "POST":
+        keywords = request.form["name"]
+        print(keywords)
+        return redirect(url_for('result', keywords = keywords))
+    else: 
+        return render_template("Search.html")
+    '''return render_template("Search.html")'''
 
-@app.route("/Result.html")
-def result():
+@app.route('/Result.html/<keywords>')
+def result(keywords):
+    print("result:" + keywords)
+    query = { "title" : { "$regex": keywords, "$options" : "i"}}
+    result_count = collection.count_documents(query)
+    print(query)
+    print(result_count)
+    dataResult = collection.find(query)
 
-    headings = ("BookID", "Title")
-
-    dataResult = {
-    ("BookID1", "BookTitle1"),
-    ("BookID2", "BookTitle2"),
-    ("BookID3", "BookTitle3"),
-    ("BookID4", "BookTitle4")
-    }
-    return render_template('Result.html', dataResult = dataResult)
+    return render_template("Result.html")
 
 @app.route("/Manage.html", methods=["POST", "GET"])
 def manage():
