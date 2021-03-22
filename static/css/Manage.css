@@ -64,4 +64,45 @@
   .u-section-2 .u-table-header-1 {
     font-size: 1rem;
   }
+}.u-section-3 .u-sheet-1 {
+  min-height: 77px;
+}
+
+.u-section-3 .u-form-1 {
+  height: 77px;
+  width: 655px;
+  margin: 0 auto 60px;
+}
+
+.u-section-3 .u-form-group-2 {
+  margin-left: 0;
+}
+
+@media (max-width: 1199px) {
+  .u-section-3 .u-form-group-2 {
+    width: 570px;
+    margin-top: 30px;
+    margin-right: auto;
+    margin-bottom: 60px;
+  }
+}
+
+@media (max-width: 767px) {
+  .u-section-3 .u-form-1 {
+    width: 540px;
+  }
+
+  .u-section-3 .u-form-group-2 {
+    width: 540px;
+  }
+}
+
+@media (max-width: 575px) {
+  .u-section-3 .u-form-1 {
+    width: 340px;
+  }
+
+  .u-section-3 .u-form-group-2 {
+    width: 340px;
+  }
 }

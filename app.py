@@ -1,11 +1,15 @@
 # import dependencies
-from flask import Flask, render_template, redirect, url_for
+from flask import Flask, render_template, redirect, url_for, request
 from pymongo import MongoClient
 import mysql.connector
 from mysql.connector import Error
 import pandas as pd
 import json
+<<<<<<< Updated upstream
 import datetime
+=======
+from datetime import datetime, timedelta
+>>>>>>> Stashed changes
 
 app = Flask(__name__)
 
@@ -89,18 +93,69 @@ def result():
     }
     return render_template('Result.html', dataResult = dataResult)
 
-@app.route("/Manage.html")
+@app.route("/Manage.html", methods=["POST", "GET"])
 def manage():
+    if request.method == "POST":
+        now = datetime.now()
+        formatted_now = now.strftime('%Y-%m-%d')
+
+        currentBookID = request.form["bookID"]
+        action = request.form["action"]
+        
+        sql_getbook_query = "SELECT bookID, borrowedBy, reservedBy, dueDate, borrowDate FROM book WHERE bookID = {}".format(currentBookID)
+        cursor.execute(sql_getbook_query)
+        bookRecord = cursor.fetchall()
+
+        sql_getuser_query = "SELECT userID, bookBorrowings, bookReservations FROM users WHERE userID = {}".format(2)   #need to add global user here
+        cursor.execute(sql_getuser_query)
+        userRecord = cursor.fetchall()
+
+        sql_getfine_query = "SELECT userID, amount FROM fine WHERE userID = {}".format(2)     #need to add global user here
+        cursor.execute(sql_getfine_query)
+        fineRecord = cursor.fetchall()
+
+        if action == "Convert":
+            if bookRecord[0][1] == None and bookRecord[0][2] == 2 and userRecord[0][1] < 4:    #need to add global user here
+                dueDate = now + timedelta(days=28)
+                formatted_date = dueDate.strftime('%Y-%m-%d')
+                sql_updatebook_query = "UPDATE book SET borrowedBy = {}, reservedBy = NULL, borrowDate = '{}', dueDate = '{}' WHERE bookID = {}".format(2, formatted_now, formatted_date, currentBookID)  #need to add global user here
+                sql_updateuser_query = "UPDATE users SET bookBorrowings = {}, bookReservations = {} WHERE userID = {}".format(userRecord[0][1] + 1, userRecord[0][2] - 1, 2)    #need to add global user here
+                cursor.execute(sql_updatebook_query)
+                cursor.execute(sql_updateuser_query)
+
+        elif action == "Cancel":
+            if bookRecord[0][2] == 2:   #need to add global user here
+                sql_updatebook_query = "UPDATE book SET reservedBy = NULL WHERE bookID = {}".format(currentBookID)
+                sql_updateuser_query = "UPDATE users SET bookReservations = {} WHERE userID = {}".format(userRecord[0][2] - 1, 2)   #need to add global user here
+                cursor.execute(sql_updatebook_query)
+                cursor.execute(sql_updateuser_query)
+
+        elif action == "Extend":
+            if bookRecord[0][1] == 2 and bookRecord[0][2] == None:   #need to add global user here
+                dueDate = now + timedelta(days=28)
+                formatted_date = dueDate.strftime('%Y-%m-%d')
+                sql_updatebook_query = "UPDATE book SET dueDate = '{}' WHERE bookID = {}".format(formatted_date, currentBookID)
+                cursor.execute(sql_updatebook_query)
+
+        elif action == "Return":
+            if bookRecord[0][1] == 2:    #need to add global user here
+                sql_updatebook_query = "UPDATE book SET borrowedBy = NULL, dueDate = NULL, borrowDate = NULL WHERE bookID = {}".format(currentBookID)
+                sql_updateuser_query = "UPDATE users SET bookBorrowings = {} WHERE userID = {}".format(userRecord[0][1] - 1, 2)    #need to add global user here
+                cursor.execute(sql_updatebook_query)
+                cursor.execute(sql_updateuser_query)
+        
+        connection.commit()
+        return redirect(url_for(manage))
+
     headings = ("BookID", "Status", "Due/Available Date", "Action")
     data = []
-    sql_select_Query = "SELECT bookID, borrowedBy, reservedBy, dueDate FROM Book WHERE borrowedBy = {0} OR reservedBy = {0}".format(2)  # need to add jiashangs part here
-    cursor = connection.cursor()
+    sql_select_Query = "SELECT bookID, borrowedBy, reservedBy, dueDate FROM Book WHERE borrowedBy = {0} OR reservedBy = {0}".format(2)  # need to add global user var here
     cursor.execute(sql_select_Query)
     # get all records
     records = cursor.fetchall()
     for row in records:
         bookID, borrowedBy, reservedBy, dueDate = row
-        if borrowedBy == 2:       # need to add jiashangs part here
+        if borrowedBy == 2:       # need to add global user var here
             status = "Borrowed"
         else:
             status = "Reserved"
