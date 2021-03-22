@@ -1,12 +1,10 @@
 # import dependencies
-from flask import Flask, render_template, redirect, url_for, request
+from flask import Flask, render_template, redirect, url_for
 from pymongo import MongoClient
 import mysql.connector
 from mysql.connector import Error
 import pandas as pd
 import json
-import datetime
-from datetime import datetime, timedelta
 
 app = Flask(__name__)
 
@@ -68,90 +66,55 @@ def main():
 def main2():
     return render_template('Home.html')
 
-@app.route("/Search.html",methods=['POST', "GET"])
-def search():
+@app.route('/simpleSearch', methods=['GET', 'POST'])
+def simpleSearch():
     if request.method == "POST":
-        keywords = request.form["name"]
-        print(keywords)
+        keywords = request.form['name']
+
         return redirect(url_for('result', keywords = keywords))
-    else: 
-        return render_template("Search.html")
-    '''return render_template("Search.html")'''
+    else:
+        return render_template('Search.html')
 
-@app.route('/Result.html/<keywords>')
+'''
+@app.route("/Search.html", methods=['POST'])
+def search():
+    booktitle = request.form[
+    bookauthor = request.form[
+    bookcategory = request.form[
+    bookyearofpublish = request.form[
+    query = { "title" : {"$regex": booktitle, "$options" : "i"}, 
+        "authors" : {"$regex" : bookauthor, "$options" : "i"},
+        "categories" : {"$regex" : bookcategories, "$options" : "i"},
+        "publishedDate" : {"$regex" : bookyearofpublish, "$options" : "i"}}
+    data = collection.find(query, {"_id":1, "title":1})
+    listdata = list(data)
+    return render_template('Search.html', data = list(data))
+'''
+
+@app.route("/Result.html")
 def result(keywords):
-    print("result:" + keywords)
+    headings = ("BookID", "Title")
     query = { "title" : { "$regex": keywords, "$options" : "i"}}
-    result_count = collection.count_documents(query)
-    print(query)
-    print(result_count)
-    dataResult = collection.find(query)
+    data = collection.find(query, {"_id":1, "title":1})
+    listdata = list(data)
+    dataResult = []
+    headings = ("BookID", "Title")
+    for dic in listdata:
+        dataResult.append([dic.get("_id"), dic.get("title")])
+    return render_template('Result.html', dataResult = dataResult)
 
-    return render_template("Result.html")
-
-@app.route("/Manage.html", methods=["POST", "GET"])
+@app.route("/Manage.html")
 def manage():
-    if request.method == "POST":
-        now = datetime.now()
-        formatted_now = now.strftime('%Y-%m-%d')
-
-        currentBookID = request.form["bookID"]
-        action = request.form["action"]
-        
-        sql_getbook_query = "SELECT bookID, borrowedBy, reservedBy, dueDate, borrowDate FROM book WHERE bookID = {}".format(currentBookID)
-        cursor.execute(sql_getbook_query)
-        bookRecord = cursor.fetchall()
-
-        sql_getuser_query = "SELECT userID, bookBorrowings, bookReservations FROM users WHERE userID = {}".format(2)   #need to add global user here
-        cursor.execute(sql_getuser_query)
-        userRecord = cursor.fetchall()
-
-        sql_getfine_query = "SELECT userID, amount FROM fine WHERE userID = {}".format(2)     #need to add global user here
-        cursor.execute(sql_getfine_query)
-        fineRecord = cursor.fetchall()
-
-        if action == "Convert":
-            if bookRecord[0][1] == None and bookRecord[0][2] == 2 and userRecord[0][1] < 4:    #need to add global user here
-                dueDate = now + timedelta(days=28)
-                formatted_date = dueDate.strftime('%Y-%m-%d')
-                sql_updatebook_query = "UPDATE book SET borrowedBy = {}, reservedBy = NULL, borrowDate = '{}', dueDate = '{}' WHERE bookID = {}".format(2, formatted_now, formatted_date, currentBookID)  #need to add global user here
-                sql_updateuser_query = "UPDATE users SET bookBorrowings = {}, bookReservations = {} WHERE userID = {}".format(userRecord[0][1] + 1, userRecord[0][2] - 1, 2)    #need to add global user here
-                cursor.execute(sql_updatebook_query)
-                cursor.execute(sql_updateuser_query)
-
-        elif action == "Cancel":
-            if bookRecord[0][2] == 2:   #need to add global user here
-                sql_updatebook_query = "UPDATE book SET reservedBy = NULL WHERE bookID = {}".format(currentBookID)
-                sql_updateuser_query = "UPDATE users SET bookReservations = {} WHERE userID = {}".format(userRecord[0][2] - 1, 2)   #need to add global user here
-                cursor.execute(sql_updatebook_query)
-                cursor.execute(sql_updateuser_query)
-
-        elif action == "Extend":
-            if bookRecord[0][1] == 2 and bookRecord[0][2] == None:   #need to add global user here
-                dueDate = now + timedelta(days=28)
-                formatted_date = dueDate.strftime('%Y-%m-%d')
-                sql_updatebook_query = "UPDATE book SET dueDate = '{}' WHERE bookID = {}".format(formatted_date, currentBookID)
-                cursor.execute(sql_updatebook_query)
-
-        elif action == "Return":
-            if bookRecord[0][1] == 2:    #need to add global user here
-                sql_updatebook_query = "UPDATE book SET borrowedBy = NULL, dueDate = NULL, borrowDate = NULL WHERE bookID = {}".format(currentBookID)
-                sql_updateuser_query = "UPDATE users SET bookBorrowings = {} WHERE userID = {}".format(userRecord[0][1] - 1, 2)    #need to add global user here
-                cursor.execute(sql_updatebook_query)
-                cursor.execute(sql_updateuser_query)
-        
-        connection.commit()
-        return redirect(url_for(manage))
-
     headings = ("BookID", "Status", "Due/Available Date", "Action")
     data = []
-    sql_select_Query = "SELECT bookID, borrowedBy, reservedBy, dueDate FROM Book WHERE borrowedBy = {0} OR reservedBy = {0}".format(2)  # need to add global user var here
+    sql_select_Query = "SELECT bookID, borrowedBy, reservedBy, dueDate FROM Book WHERE borrowedBy = {0} OR reservedBy = {0}".format(2)  # need to add jiashangs part here
+    cursor = connection.cursor()
     cursor.execute(sql_select_Query)
     # get all records
     records = cursor.fetchall()
     for row in records:
         bookID, borrowedBy, reservedBy, dueDate = row
-        if borrowedBy == 2:       # need to add global user var here
+        if borrowedBy == 2:       # need to add jiashangs part here
             status = "Borrowed"
         else:
             status = "Reserved"
@@ -164,6 +127,7 @@ def payment():
 
 @app.route("/Admin.html")
 def admin():
+    sql_admin_Query = "SELECT "
     return render_template('Admin.html')
 
 @app.route("/Success.html")
@@ -173,30 +137,6 @@ def success():
 @app.route("/Fail.html")
 def fail():
     return render_template('Fail.html')
-
-@app.route("/Holding.html")
-def holding(ID, title, borrowed, reserved):
-    return render_template('Holding.html', bookID = ID, title = title, bool1 = borrowed, bool2 = reserved)
-
-@app.route("/Borrow.html")
-def borrow(bookID, userID):
-    currDate = date.today().strftime('%d/%m/%Y')
-    dueDate = currDate + datetime.timedelta(days=14)
-    # update borrow status of book
-    sql_borrow_query = "UPDATE book SET borrowID=?, borrowDate=?, dueDate=? WHERE _id=?"
-    cursor = connection.cursor()
-    cursor.execute(sql_borrow_query, (userID, currDate, dueDate, bookID))
-    connection.commit()
-    return render_template('Success.html')
-    
-@app.route("/Reserve.html")
-def reserve(bookID, userID):
-    # update reserve status of book
-    sql_reserve_query = "UPDATE book SET reserveID=? WHERE _id=?"
-    cursor = connection.cursor()
-    cursor.execute(sql_reserve_query, (userID, bookID))
-    connection.commit()
-    return render_template('Sucesss.html')
 
 # final line
 if __name__ == "__main__":
