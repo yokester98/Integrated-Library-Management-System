@@ -188,6 +188,7 @@ def borrow(bookID, userID):
     cursor = connection.cursor()
     cursor.execute(sql_borrow_query, (userID, currDate, dueDate, bookID))
     connection.commit()
+    return render_template('Success.html')
     
 @app.route("/Reserve.html")
 def reserve(bookID, userID):
@@ -196,6 +197,7 @@ def reserve(bookID, userID):
     cursor = connection.cursor()
     cursor.execute(sql_reserve_query, (userID, bookID))
     connection.commit()
+    return render_template('Sucesss.html')
 
 # final line
 if __name__ == "__main__":
