@@ -185,7 +185,7 @@ def holding(ID, title):
     num_borrowed = cursor.fetchall()[0][0]
     return render_template('Holding.html', bookID = ID, title = title, borrowed = borrowed, reserved = reserved, amount = amount, num_borrowed = num_borrowed)
 '''
-@app.get("Borrow.html/{bookID}")
+@app.route("Borrow.html/<bookID>")
 def borrow(bookID):
     currDate = date.today().strftime('%Y/%m/%d')
     dueDate = currDate + datetime.timedelta(days=28)
@@ -196,7 +196,7 @@ def borrow(bookID):
     connection.commit()
     return render_template('Success.html')
     
-@app.get("Reserve.html/{bookID}")
+@app.route("Reserve.html/<bookID>")
 def reserve(bookID):
     # update reserve status of book
     sql_reserve_query = "UPDATE book SET reserveID=? WHERE _id=?"
