@@ -7,11 +7,11 @@ USE Library;
 SET NAMES utf8 ;
 SET character_set_client = utf8mb4 ;
 
-CREATE TABLE Users (
+CREATE TABLE User (
   userID 				int(7)	 		NOT NULL AUTO_INCREMENT,
+  firstName				text			NOT NULL,
+  lastName				text			NOT NULL,
   password				varchar(50) 	NOT NULL,
-  bookBorrowings		TINYINT 		NOT NULL DEFAULT '0',
-  bookReservations 		TINYINT 		NOT NULL DEFAULT '0',
   PRIMARY KEY (userID)
 ) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
@@ -21,12 +21,7 @@ CREATE TABLE Book(
     title				text,
     authors				text,
     category			text,
-    datePublished		text,
-    borrowedBy			int(7),
-    reservedBy			int(7),
-    returnDate			DATE,
-    dueDate				DATE,
-    borrowDate			DATE,
+    datePublished		DATE,
     PRIMARY KEY (bookID));
     
     -- FINE
@@ -34,7 +29,7 @@ CREATE TABLE Fine(
 	userID    	int(7)      NOT NULL,
     amount    	int         NOT NULL,
     PRIMARY KEY (userID),
-    FOREIGN KEY (userID)	REFERENCES users(userID));
+    FOREIGN KEY (userID)	REFERENCES User(userID));
     
     -- PAYMENT
 CREATE TABLE Payment(
@@ -43,18 +38,51 @@ CREATE TABLE Payment(
     userID    	int(7)      NOT NULL,
     datePaid  	DATE      	NOT NULL,
     PRIMARY KEY (receiptNum),
-    FOREIGN KEY (userID)    REFERENCES users(userID));
+    FOREIGN KEY (userID)    REFERENCES User(userID));
     
-    -- libbooks.json to table
-CREATE TABLE `library`.`libbooks` (
-	`_id` 				int,
-	`title` 			text, 	
-	`isbn` 				text, 	
-    `pageCount` 		int,
-	`publishedDate` 	text,	
-    `thumbnailUrl`		text,
-	`shortDescription` 	text,
-	`longDescription` 	text, 
-	`status` 			text, 
-	`authors` 			text, 
-	`categories` 		text)
+	-- BORROWED
+CREATE TABLE Borrowed(
+	bookID  	int			NOT NULL,
+    userID		int			NOT NULL,
+    borrowDate	DATE		NOT NULL,
+    dueDate		DATE		NOT NULL,
+    PRIMARY KEY (bookID),
+    FOREIGN KEY (bookID)    REFERENCES Book(bookID),
+    FOREIGN KEY (userID)	REFERENCES User(userID));
+    
+	-- RESERVED
+CREATE TABLE Reserved(
+	bookID  	int			NOT NULL,
+    userID		int			NOT NULL,
+    reserveDate	DATE		NOT NULL,
+    PRIMARY KEY (bookID),
+    FOREIGN KEY (bookID)    REFERENCES Book(bookID),
+    FOREIGN KEY (userID)	REFERENCES User(userID));
+    
+	-- INSERT USER DATA
+INSERT INTO User VALUES (1, 'Radell', 'Ng', 'abcd');
+INSERT INTO User VALUES (2, 'Yoke Yue', 'Loy', 'abcde');
+INSERT INTO User VALUES (3, 'Wen Yin', 'Fun', 'abcdef');
+INSERT INTO User VALUES (4, 'Jia Shang', 'Oh', 'abcdefg');
+INSERT INTO User VALUES (5, 'Zheng Hong', 'Lee', 'abc');
+
+	-- INSERT BOOK DATA
+INSERT INTO Book VALUES(1, 'RANDOM', 'LUOKAI', 'SQL', DATE("21-03-07"));
+INSERT INTO Book VALUES(2, 'CompClub', 'Wenyin', 'Welfare', DATE("21-03-07"));
+INSERT INTO Book VALUES(3, 'SHEARES', 'Tammi', 'Hall', DATE("21-03-07"));
+INSERT INTO Book VALUES(4, 'MAHJONG', 'Radell', 'Entertainment', DATE("21-03-07"));
+INSERT INTO Book VALUES(5, 'BT2102', 'DPOO', 'MySQL', DATE("21-03-07"));
+
+	-- INSERT FINE DATA
+-- INSERT INTO Fine VALUES (00001, 20);
+-- INSERT INTO Fine VALUES (00002, 15);
+-- INSERT INTO Fine VALUES (00003, 27);
+-- INSERT INTO Fine VALUES (00004, 33);
+INSERT INTO Fine VALUES (00005, 15);
+
+	-- INSERT PAYMENT DATA
+INSERT INTO Payment VALUES (69691, 15, 00001, DATE("21-03-07"));
+INSERT INTO Payment VALUES (69651, 15, 00002, DATE("21-03-07"));
+INSERT INTO Payment VALUES (69621, 20, 00003, DATE("21-03-07"));
+-- INSERT INTO Payment VALUES (69611, 33, 00004, DATE("21-03-07"));
+-- INSERT INTO Payment VALUES (69671, 5, 00005, DATE("21-03-07"));

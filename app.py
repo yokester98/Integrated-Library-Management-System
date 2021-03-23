@@ -32,26 +32,6 @@ try:
 except Error as e:
     print("Error while connecting to MySQL", e)
 
-with open('./libbooks.json') as f:
-    data = json.load(f)
-
-#insert data from libbooks.json to libbooks entity
-add_data_libbooks = ("INSERT INTO libbooks(_id, title, isbn, pageCount, publishedDate, thumbnailUrl, shortDescription, longDescription, status, authors, categories) " \
-                     "VALUES (%(_id)s, %(title)s, %(isbn)s, %(pageCount)s, %(publishedDate)s, %(thumbnailUrl)s, %(shortDescription)s, %(longDescription)s, %(status)s, %(authors)s, %(categories)s)")
-
-for row in data:
-    cursor.execute(add_data_libbooks, row)
-    
-connection.commit()
-
-# insert data from libbooks entity to book entity
-query_add_data_book = ("INSERT INTO book(bookID, title, authors, category, datePublished) " \
-                       "SELECT _id, title, authors, categories, publishedDate FROM libbooks")
-
-cursor.execute(query_add_data_book)
-
-connection.commit()
-
 '''
 finally:
     if connection.is_connected():
@@ -141,8 +121,7 @@ def manage():
                 cursor.execute(sql_updateuser_query)
         
         connection.commit()
-        return redirect(url_for("success"))
-
+    
     headings = ("BookID", "Status", "Due/Available Date", "Action")
     data = []
     sql_select_Query = "SELECT bookID, borrowedBy, reservedBy, dueDate FROM Book WHERE borrowedBy = {0} OR reservedBy = {0}".format(2)  # need to add global user var here
