@@ -48,26 +48,28 @@ def main():
 def main2():
     return render_template('Home.html')
 
-@app.route("/Search.html",methods=['POST', "GET"])
+@app.route('/Search.html', methods=['GET', 'POST'])
 def search():
     if request.method == "POST":
-        keywords = request.form["name"]
-        print(keywords)
-        return redirect(url_for('result', keywords = keywords))
-    else: 
-        return render_template("Search.html")
-    '''return render_template("Search.html")'''
+        keywords = request.form['book']
+        action = request.form["action"]
+        if action == "Title":
+            query = { "title" : { "$regex": keywords, "$options" : "i"}}
+        elif action == "Author":
+            query = { "authors" : { "$regex": keywords, "$options" : "i"}}
+        elif action == "Category":
+            query = { "categories" : { "$regex": keywords, "$options" : "i"}}
+        elif action == "YearOfPublish":
+            query = { "publishedDate" : { "$regex": keywords, "$options" : "i"}}
+        data = collection.find(query, {"_id":1, "title":1})
+        listdata = list(data)
+        data = []
+        headings = ("BookID", "Title")
+        for dic in listdata:
+            data += ((dic.get("_id"), dic.get("title")),)
 
-@app.route('/Result.html/<keywords>')
-def result(keywords):
-    print("result:" + keywords)
-    query = { "title" : { "$regex": keywords, "$options" : "i"}}
-    result_count = collection.count_documents(query)
-    print(query)
-    print(result_count)
-    dataResult = collection.find(query)
-
-    return render_template("Result.html")
+        return render_template('Search.html', data=data)
+    return render_template('Search.html')
 
 @app.route("/Manage.html", methods=["POST", "GET"])
 def manage():
@@ -153,6 +155,7 @@ def success():
 def fail():
     return render_template('Fail.html')
 
+
 @app.route("/Holding.html")
 def holding(ID, title):
     cursor = connection.cursor()
@@ -181,7 +184,7 @@ def holding(ID, title):
     cursor.execute(sql_check_numBorrowed)
     num_borrowed = cursor.fetchall()[0][0]
     return render_template('Holding.html', bookID = ID, title = title, borrowed = borrowed, reserved = reserved, amount = amount, num_borrowed = num_borrowed)
-
+'''
 @app.get("Borrow.html/{bookID}")
 def borrow(bookID):
     currDate = date.today().strftime('%Y/%m/%d')
@@ -201,7 +204,7 @@ def reserve(bookID):
     cursor.execute(sql_reserve_query, (userID, bookID))
     connection.commit()
     return render_template('Sucesss.html')
-
+'''
 # final line
 if __name__ == "__main__":
     app.run()
