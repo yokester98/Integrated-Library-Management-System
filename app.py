@@ -154,22 +154,47 @@ def fail():
     return render_template('Fail.html')
 
 @app.route("/Holding.html")
-def holding(ID, title, borrowed, reserved):
-    return render_template('Holding.html', bookID = ID, title = title, bool1 = borrowed, bool2 = reserved)
+def holding(ID, title):
+    cursor = connection.cursor()
+    # check whether book is borrowed
+    sql_check_borrow = "SELECT borrowedBy FROM book WHERE bookID=?"
+    cursor.execute(sql_check_borrow, (ID))
+    borrow_row = cursor.fetchall()
+    if borrow_row[0][0] == null:
+        borrowed = No
+    else:
+        borrowed = Yes
+    # check whether book is reserved
+    sql_check_reserve = "SELECT reservedBy FROM book WHERE bookID=?"
+    cursor.execute(sql_check_reserve, (ID))
+    reserve_row = cursor.fetchall()
+    if reserve_row[0][0] == null:
+        reserved = No
+    else:
+        reserved = Yes
+    # check for outstanding fines
+    sql_check_fine = "SELECT amount FROM Fine WHERE userID=?"
+    cursor.execute(sql_check_fine, (userID))
+    amount = cursor.fetchall()[0][0]
+    # check number of books borrowed
+    sql_check_numBorrowed = "SELECT bookBorrowings FROM Users WHERE userID=?"
+    cursor.execute(sql_check_numBorrowed)
+    num_borrowed = cursor.fetchall()[0][0]
+    return render_template('Holding.html', bookID = ID, title = title, borrowed = borrowed, reserved = reserved, amount = amount, num_borrowed = num_borrowed)
 
-@app.route("/Borrow.html")
-def borrow(bookID, userID):
-    currDate = date.today().strftime('%d/%m/%Y')
-    dueDate = currDate + datetime.timedelta(days=14)
+@app.get("Borrow.html/{bookID}")
+def borrow(bookID):
+    currDate = date.today().strftime('%Y/%m/%d')
+    dueDate = currDate + datetime.timedelta(days=28)
+    cursor = connection.cursor()
     # update borrow status of book
     sql_borrow_query = "UPDATE book SET borrowID=?, borrowDate=?, dueDate=? WHERE _id=?"
-    cursor = connection.cursor()
     cursor.execute(sql_borrow_query, (userID, currDate, dueDate, bookID))
     connection.commit()
     return render_template('Success.html')
     
-@app.route("/Reserve.html")
-def reserve(bookID, userID):
+@app.get("Reserve.html/{bookID}")
+def reserve(bookID):
     # update reserve status of book
     sql_reserve_query = "UPDATE book SET reserveID=? WHERE _id=?"
     cursor = connection.cursor()

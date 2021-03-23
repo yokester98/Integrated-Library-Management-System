@@ -159,22 +159,29 @@
         <h2 class="u-custom-font u-font-playfair-display u-text u-text-1">
           Integrated Library System
         </h2>
+        <h3>Rules:</h3>
+        <h4>
+          - To borrow a book, please ensure that you have no outstanding fines and you have not borrowed more than 3 books
+          - To reserve a book, please ensure that you have no outstanding fines
+        </h4>
       </div>
     </section>
     <section class="u-align-left u-clearfix u-section-2" id="sec-73e1">
+      <p>Outstanding fines: {{amount}}</p>
+      <p>Number of books borrowed: {{num_borrowed}}</p>
       <p>BookID: {{bookID}}</p>
       <p>Title: {{title}}</p>
-      <p>Borrowed: {{bool1}}</p>
-      <p>Reserved: {{bool2}}</p>
+      <p>Borrowed: {{borrowed}}</p>
+      <p>Reserved: {{reserved}}</p>
     </section>
     <section>
       <p>
-        {% if bool1 %}
-          <a href="Borrowed.html" class="btn btn-primary active" role="button" data-bs-toggle="button" aria-pressed="true">Borrow</a> 
+        {% if {{amount}} == 0 and {{num_borrowed}} < 4 and {{borrowed}} == "No" %}
+          <a href="Borrowed.html/{{bookID}}" class="btn btn-primary active" role="button" data-bs-toggle="button" aria-pressed="true">Borrow</a> 
         {% else %}
           <a href="Fail.html" class="btn btn-primary disabled" tabindex="-1" aria-disabled="true" role="button" data-bs-toggle="button">Borrow</a>
-        {% if bool2 %}
-          <a href="Reserved.html" class="btn btn-primary active" role="button" data-bs-toggle="button" aria-pressed="true">Reserve</a> 
+        {% if {{amount}} == 0 and {{reserved}} == "No" %}
+          <a href="Reserved.html/{{bookID}}" class="btn btn-primary active" role="button" data-bs-toggle="button" aria-pressed="true">Reserve</a> 
         {% else %}
           <a href="Fail.html" class="btn btn-primary disabled" tabindex="-1" aria-disabled="true" role="button" data-bs-toggle="button">Reserve</a>
       </p>
