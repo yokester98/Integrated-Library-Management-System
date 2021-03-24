@@ -73,32 +73,6 @@ def search():
 
 @app.route("/Manage.html", methods=["POST", "GET"])
 def manage():
-    headings = ("BookID", "Status", "Due/Available Date")
-    data = []
-    sql_getBorrowed_query = "SELECT bookID, borrowDate, dueDate FROM borrowed WHERE userID = {}".format(2)  # need to add global user var here
-    cursor.execute(sql_getBorrowed_query)
-    borrowed_records = cursor.fetchall()
-
-    sql_getReserved_query = "SELECT bookID, reserveDate FROM reserved WHERE userID = {}".format(2)  # need to add global user var here
-    cursor.execute(sql_getReserved_query)
-    reserved_records = cursor.fetchall()
-
-    for row in borrowed_records:
-        bookID, borrowDate, dueDate = row
-        data.append([bookID, "Borrowed", dueDate])
-
-    for row in reserved_records:
-        bookID, reserveDate = row
-        # check when is the available date for the reserved books
-        sql_getBorrowedBook_query = "SELECT dueDate FROM borrowed WHERE bookID = {}".format(bookID)
-        cursor.execute(sql_getBorrowedBook_query)
-        reserved_book = cursor.fetchall()
-        if len(reserved_book) > 0:
-            availDate = reserved_book[0][0].strftime('%Y-%m-%d')
-        else:
-            availDate = datetime.now().strftime('%Y-%m-%d')
-        data.append([bookID, "Reserved", availDate])
-
     # Check if user has submitted any actions
     if request.method == "POST":
         now = datetime.now()
@@ -134,9 +108,12 @@ def manage():
                         cursor.execute(sql_updateReserved_query)
 
             elif action == "Cancel":
-                if reservedBookRecord[0][0] == 2:   #need to add global user here
-                    sql_updateReserved_query = "DELETE FROM reserved WHERE bookID = {}".format(currentBookID)
-                    cursor.execute(sql_updateReserved_query)
+                if len(reservedBookRecord) == 0:
+                    print("Reserved Book not found")
+                else:
+                    if reservedBookRecord[0][0] == 2:   #need to add global user here
+                        sql_updateReserved_query = "DELETE FROM reserved WHERE bookID = {}".format(currentBookID)
+                        cursor.execute(sql_updateReserved_query)
 
         elif action == "Extend" or action == "Return":
             sql_getBorrowedBook_query = "SELECT bookID, userID, borrowDate, dueDate FROM borrowed WHERE bookID = {}".format(currentBookID)
@@ -161,7 +138,9 @@ def manage():
                     dueDate = borrowedBookRecord[0][3]
                     delta = now.date() - dueDate
                     if delta.days > 0:
-                        if cursor.execute("SELECT COUNT(1) FROM fine WHERE userID = {}".format(2)):  # need to add global user here
+                        cursor.execute("SELECT COUNT(1) FROM fine WHERE userID = {}".format(2))  # need to add global user here
+                        count = cursor.fetchone()[0]
+                        if count:  
                             sql_updateFine_query = "UPDATE fine SET amount = {} WHERE userID = {}".format(fineRecord[0][1] + delta.days, 2)  #need to add global user here
                             cursor.execute(sql_updateFine_query)
                         else:
@@ -172,8 +151,60 @@ def manage():
                     cursor.execute("DELETE FROM borrowed WHERE bookID = {}".format(currentBookID))
 
         connection.commit()
-        return render_template('Manage.html', date = data)
+
+        headings = ("BookID", "Status", "Due/Available Date")
+        data = []
+        sql_getBorrowed_query = "SELECT bookID, borrowDate, dueDate FROM borrowed WHERE userID = {}".format(2)  # need to add global user var here
+        cursor.execute(sql_getBorrowed_query)
+        borrowed_records = cursor.fetchall()
+
+        sql_getReserved_query = "SELECT bookID, reserveDate FROM reserved WHERE userID = {}".format(2)  # need to add global user var here
+        cursor.execute(sql_getReserved_query)
+        reserved_records = cursor.fetchall()
+
+        for row in borrowed_records:
+            bookID, borrowDate, dueDate = row
+            data.append([bookID, "Borrowed", dueDate])
+
+        for row in reserved_records:
+            bookID, reserveDate = row
+            # check when is the available date for the reserved books
+            sql_getBorrowedBook_query = "SELECT dueDate FROM borrowed WHERE bookID = {}".format(bookID)
+            cursor.execute(sql_getBorrowedBook_query)
+            reserved_book = cursor.fetchall()
+            if len(reserved_book) > 0:
+                availDate = reserved_book[0][0].strftime('%Y-%m-%d')
+            else:
+                availDate = datetime.now().strftime('%Y-%m-%d')
+            data.append([bookID, "Reserved", availDate])
+        return render_template('Manage.html', data = data)
     
+    headings = ("BookID", "Status", "Due/Available Date")
+    data = []
+    sql_getBorrowed_query = "SELECT bookID, borrowDate, dueDate FROM borrowed WHERE userID = {}".format(2)  # need to add global user var here
+    cursor.execute(sql_getBorrowed_query)
+    borrowed_records = cursor.fetchall()
+
+    sql_getReserved_query = "SELECT bookID, reserveDate FROM reserved WHERE userID = {}".format(2)  # need to add global user var here
+    cursor.execute(sql_getReserved_query)
+    reserved_records = cursor.fetchall()
+
+    for row in borrowed_records:
+        bookID, borrowDate, dueDate = row
+        data.append([bookID, "Borrowed", dueDate])
+
+    for row in reserved_records:
+        bookID, reserveDate = row
+        # check when is the available date for the reserved books
+        sql_getBorrowedBook_query = "SELECT dueDate FROM borrowed WHERE bookID = {}".format(bookID)
+        cursor.execute(sql_getBorrowedBook_query)
+        reserved_book = cursor.fetchall()
+        if len(reserved_book) > 0:
+            availDate = reserved_book[0][0].strftime('%Y-%m-%d')
+        else:
+            availDate = datetime.now().strftime('%Y-%m-%d')
+        data.append([bookID, "Reserved", availDate])
+
     return render_template('Manage.html', data = data)
 
 @app.route("/Payment.html")
