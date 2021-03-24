@@ -204,14 +204,28 @@
           </div>
         </div>
         </form>
-        <p></p>
-        <center>
-        {% for item in data %}
-            <tr>
-                <td> {{item[0]}} , {{item[1]}}</td>
-                </br>
-            </tr>
-        {% endfor %}
-        </center>
-    </body>
+        <section class="u-align-center u-clearfix u-section-2" id="carousel_0529">
+          <div class="u-clearfix u-sheet u-sheet-1">
+            <div class="u-expanded-width u-table u-table-responsive u-table-1">
+              <table class="u-table-entity u-table-entity-1">
+                <thead class="u-custom-font u-font-courier-new u-palette-4-base u-table-header u-table-header-1">
+                  <tr style="height: 58px;">
+                    <th class="u-table-cell">Book ID</th>
+                    <th class="u-table-cell">Title</th>
+                  </tr>
+                </thead>
+                <tbody class="u-table-body">
+                    {% for item in data %}
+                    <tr style="height: 55px;">
+                      <td class="u-border-1 u-border-grey-30 u-border-no-left u-border-no-right u-table-cell"{{ cell }}> {{item[0]}}</td>
+                      <td class="u-border-1 u-border-grey-30 u-border-no-left u-border-no-right u-table-cell"{{ cell }}> {{item[1]}}</td>
+                  </tr>
+              {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+  </body>
 </html>
+
