@@ -24,7 +24,7 @@ try:
     if connection.is_connected():
         db_Info = connection.get_server_info()
         print("Connected to MySQL Server version ", db_Info)
-        cursor = connection.cursor()
+        cursor = connection.cursor(buffered=True)
         cursor.execute("select database();")
         record = cursor.fetchone()
         print("You're connected to database: ", record)
@@ -83,19 +83,20 @@ def manage():
     cursor.execute(sql_getReserved_query)
     reserved_records = cursor.fetchall()
 
-    for row in reserved_records:
-        bookID, reserveDate = row
-        sql_getReservedBook_query = "SELECT dueDate FROM borrowed WHERE bookID = {}".format(bookID)
-        cursor.execute(sql_getReservedBook_query)
-        reserved_book = cursor.fetchall()
-        row.append(reserved_book[0])
-
     for row in borrowed_records:
         bookID, borrowDate, dueDate = row
         data.append([bookID, "Borrowed", dueDate])
 
     for row in reserved_records:
-        bookID, reserveDate, availDate = row
+        bookID, reserveDate = row
+        # check when is the available date for the reserved books
+        sql_getBorrowedBook_query = "SELECT dueDate FROM borrowed WHERE bookID = {}".format(bookID)
+        cursor.execute(sql_getBorrowedBook_query)
+        reserved_book = cursor.fetchall()
+        if len(reserved_book) > 0:
+            availDate = reserved_book[0][0].strftime('%Y-%m-%d')
+        else:
+            availDate = datetime.now().strftime('%Y-%m-%d')
         data.append([bookID, "Reserved", availDate])
 
     # Check if user has submitted any actions
@@ -105,14 +106,6 @@ def manage():
 
         currentBookID = request.form["bookID"]
         action = request.form["action"]
-        
-        sql_getbook_query = "SELECT bookID, borrowedBy, reservedBy, dueDate, borrowDate FROM book WHERE bookID = {}".format(currentBookID)
-        cursor.execute(sql_getbook_query)
-        bookRecord = cursor.fetchall()
-
-        sql_getuser_query = "SELECT userID, bookBorrowings, bookReservations FROM users WHERE userID = {}".format(2)   #need to add global user here
-        cursor.execute(sql_getuser_query)
-        userRecord = cursor.fetchall()
 
         sql_getfine_query = "SELECT userID, amount FROM fine WHERE userID = {}".format(2)     #need to add global user here
         cursor.execute(sql_getfine_query)
@@ -124,11 +117,16 @@ def manage():
             reservedBookRecord = cursor.fetchall()
 
             if action == "Convert":
-                if cursor.execute("SELECT COUNT(1) FROM borrowed WHERE bookID = {}".format(currentBookID)):
+                cursor.execute("SELECT COUNT(1) FROM borrowed WHERE bookID = {}".format(currentBookID))
+                count = cursor.fetchone()[0]
+                if count:
                     # insert error message here
+                    print("Error Converting Reserved book to Borrowed")
                 else:
-                    if reservedBookRecord[0][0] == 2 and cursor.execute("SELECT COUNT(*) FROM borrowed WHERE bookID = {}".format(currentBookID)) < 4:    #need to add global user here
-                        dueDate = now + timedelta(days=28)
+                    cursor.execute("SELECT COUNT(*) FROM borrowed WHERE userID = {}".format(2))  #need to add global user here
+                    count = cursor.fetchone()[0]
+                    if reservedBookRecord[0][0] == 2 and count < 4:
+                        dueDate = now.date() + timedelta(days=28)
                         formatted_date = dueDate.strftime('%Y-%m-%d')
                         sql_updateBorrowed_query = "INSERT INTO borrowed VALUES ({}, {}, '{}', '{}')".format(currentBookID, 2, formatted_now, formatted_date) #need to add global user here
                         sql_updateReserved_query = "DELETE FROM reserved WHERE bookID = {}".format(currentBookID)
@@ -143,31 +141,38 @@ def manage():
         elif action == "Extend" or action == "Return":
             sql_getBorrowedBook_query = "SELECT bookID, userID, borrowDate, dueDate FROM borrowed WHERE bookID = {}".format(currentBookID)
             cursor.execute(sql_getBorrowedBook_query)
-            borrowedBookR = cursor.fetchall()
-
+            borrowedBookRecord = cursor.fetchall()
 
             if action == "Extend" and borrowedBookRecord[0][1] == 2:  #need to add global user here
+                cursor.execute("SELECT COUNT(1) FROM reserved WHERE bookID = {}".format(currentBookID))
+                count = cursor.fetchone()[0]
                 # Check if the current book is already being reserved
-                if cursor.execute("SELECT COUNT(1) FROM reserved WHERE bookID = {}".format(currentBookID)):
+                if count:
                     # insert error message here
+                    print("Error Extending Borrowed book")
                 else:
                     dueDate = now + timedelta(days=28)
                     formatted_date = dueDate.strftime('%Y-%m-%d')
-                    sql_updateBorrowed_query = "UPDATE book SET dueDate = '{}' WHERE bookID = {}".format(formatted_date, currentBookID)
+                    sql_updateBorrowed_query = "UPDATE borrowed SET dueDate = '{}' WHERE bookID = {}".format(formatted_date, currentBookID)
                     cursor.execute(sql_updateBorrowed_query)
 
             elif action == "Return":
                 if borrowedBookRecord[0][1] == 2: #need to add global user here
-                    if now
+                    dueDate = borrowedBookRecord[0][3]
+                    delta = now.date() - dueDate
+                    if delta.days > 0:
+                        if cursor.execute("SELECT COUNT(1) FROM fine WHERE userID = {}".format(2)):  # need to add global user here
+                            sql_updateFine_query = "UPDATE fine SET amount = {} WHERE userID = {}".format(fineRecord[0][1] + delta.days, 2)  #need to add global user here
+                            cursor.execute(sql_updateFine_query)
+                        else:
+                            sql_insertFine_query = "INSERT INTO fine VALUES ({}, {})".format(2, delta.days)  # need to add global user here
+                            cursor.execute(sql_insertFine_query)
 
-        elif action == "Return":
-            if bookRecord[0][1] == 2:    #need to add global user here
-                sql_updatebook_query = "UPDATE book SET borrowedBy = NULL, dueDate = NULL, borrowDate = NULL WHERE bookID = {}".format(currentBookID)
-                sql_updateuser_query = "UPDATE users SET bookBorrowings = {} WHERE userID = {}".format(userRecord[0][1] - 1, 2)    #need to add global user here
-                cursor.execute(sql_updatebook_query)
-                cursor.execute(sql_updateuser_query)
-        
+                    # delete borrow record from borrowed
+                    cursor.execute("DELETE FROM borrowed WHERE bookID = {}".format(currentBookID))
+
         connection.commit()
+        return render_template('Manage.html', date = data)
     
     return render_template('Manage.html', data = data)
 
