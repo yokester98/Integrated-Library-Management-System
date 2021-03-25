@@ -17,10 +17,7 @@ collection = db.book
 
 # mySQL connection
 try:
-    connection = mysql.connector.connect(host='localhost',
-                                         database='Library',
-                                         user='root',
-                                         password=input("type password for mySQL here: "))
+    connection = mysql.connector.connect(host='localhost', database='Library', user='root', password=input("type password for mySQL here: "))
     if connection.is_connected():
         db_Info = connection.get_server_info()
         print("Connected to MySQL Server version ", db_Info)
@@ -28,7 +25,6 @@ try:
         cursor.execute("select database();")
         record = cursor.fetchone()
         print("You're connected to database: ", record)
-
 except Error as e:
     print("Error while connecting to MySQL", e)
 
@@ -209,11 +205,29 @@ def manage():
 
 @app.route("/Payment.html")
 def payment():
+    '''now = datetime.now()
+    formatted_now = now.strftime('%Y-%m-%d')
+
+    sql_deleteFineEntry_query = "DELETE FROM fine WHERE userID = {}"
+
+    sql_insertPayment_query = "INSERT INTO payment (receiptNum, amountPaid, userID, datePaid) VALUES ({}, {}, {}, {})".format()'''
     return render_template('Payment.html')
 
 @app.route("/Admin.html")
 def admin():
-    return render_template('Admin.html')
+    sql_getAllBorrowings_query = "SELECT u.userID, firstName, lastName, br.bookID, title FROM user u JOIN borrowed br ON u.userID = br.userID JOIN book b ON br.bookID = b.bookID"
+    cursor.execute(sql_getAllBorrowings_query)
+    data_borrowed = cursor.fetchall()
+
+    sql_getAllReserved_query = "SELECT u.userID, firstName, lastName, r.bookID, title FROM user u JOIN reserved r ON u.userID = r.userID JOIN book b ON r.bookID = b.bookID"
+    cursor.execute(sql_getAllReserved_query)
+    data_reserved = cursor.fetchall()
+
+    sql_getAllFine_query = "SELECT u.userID, firstName, lastName, amount FROM user u JOIN fine f ON u.userID = f.userID"
+    cursor.execute(sql_getAllFine_query)
+    data_fine = cursor.fetchall()
+
+    return render_template('Admin.html', data_borrowed = data_borrowed, data_reserved = data_reserved, data_fine = data_fine)
 
 @app.route("/Success.html")
 def success():
@@ -275,4 +289,5 @@ def reserve(bookID):
 '''
 # final line
 if __name__ == "__main__":
+    app.debug = True
     app.run()
