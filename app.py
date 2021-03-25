@@ -145,7 +145,35 @@ def manage():
 
                     # delete borrow record from borrowed
                     cursor.execute("DELETE FROM borrowed WHERE bookID = {}".format(currentBookID))
-
+        
+        elif action == "Borrow":
+            # check if bookID exists in Borrowed
+            cursor.execute("SELECT COUNT(1) FROM Borrowed WHERE bookID = {}".format(currentBookID))
+            exist = cursor.fetchone()[0]
+            # check number of books borrowed 
+            cursor.execute("SELECT COUNT(1) FROM Borrowed WHERE userID = {}".format(userID))
+            numBorrowed = cursor.fetchone()[0]
+            # check existing fines
+            cursor.execute("SELECT amount FROM Fine WHERE userID = {}".format(userID))
+            amount = cursor.fetchone()[0]
+            if exist == 0 and numBorrowed < 4 and amount == 0:
+                currDate = date.today().strftime('%Y/%m/%d')
+                dueDate = currDate + datetime.timedelta(days=28)
+                # insert row into Borrowed
+                cursor.execute("INSERT into Borrowed values ({}, {}, {}, {})".format(currentBookID, userID, currDate, dueDate))
+        
+        elif action == "Reserve":
+            # check if book is reserved
+            cursor.execute("SELECT COUNT(1) FROM Reserved WHERE bookID = {}".format(currentBookID))
+            exist = cursor.fetchone()[0]
+            # check existing fines
+            cursor.execute("SELECT amount FROM Fine WHERE userID = {}".format(userID))
+            amount = cursor.fetchone()[0]
+            if exist == 0 and amount == 0:
+                currDate = date.today().strftime('%Y/%m/%d')
+                # insert row into Reserved
+                cursor.execute("INSERT into Reserved values ({}, {}, {})".format(currentBookID, userID, currDate))
+                
         connection.commit()
 
         headings = ("BookID", "Status", "Due/Available Date")
@@ -237,60 +265,6 @@ def success():
 def fail():
     return render_template('Fail.html')
 
-
-@app.route("/Holding.html/<ID>")
-def holding(ID):
-    cursor = connection.cursor()
-    # get book title
-    sql_title = "SELECT title FROM book WHERE bookID=?"
-    cursor.execute(sql_title, (ID))
-    title = cursor.fetchall()[0][0]
-    # check whether book is borrowed
-    sql_check_borrow = "SELECT borrowedBy FROM book WHERE bookID=?"
-    cursor.execute(sql_check_borrow, (ID))
-    borrow_row = cursor.fetchall()
-    if borrow_row[0][0] == null:
-        borrowed = No
-    else:
-        borrowed = Yes
-    # check whether book is reserved
-    sql_check_reserve = "SELECT reservedBy FROM book WHERE bookID=?"
-    cursor.execute(sql_check_reserve, (ID))
-    reserve_row = cursor.fetchall()
-    if reserve_row[0][0] == null:
-        reserved = No
-    else:
-        reserved = Yes
-    # check for outstanding fines
-    sql_check_fine = "SELECT amount FROM Fine WHERE userID=?"
-    cursor.execute(sql_check_fine, (userID))
-    amount = cursor.fetchall()[0][0]
-    # check number of books borrowed
-    sql_check_numBorrowed = "SELECT bookBorrowings FROM Users WHERE userID=?"
-    cursor.execute(sql_check_numBorrowed)
-    num_borrowed = cursor.fetchall()[0][0]
-    return render_template('Holding.html', bookID = ID, title = title, borrowed = borrowed, reserved = reserved, amount = amount, num_borrowed = num_borrowed)
-'''
-@app.route("Borrow.html/<bookID>")
-def borrow(bookID):
-    currDate = date.today().strftime('%Y/%m/%d')
-    dueDate = currDate + datetime.timedelta(days=28)
-    cursor = connection.cursor()
-    # update borrow status of book
-    sql_borrow_query = "UPDATE book SET borrowID=?, borrowDate=?, dueDate=? WHERE _id=?"
-    cursor.execute(sql_borrow_query, (userID, currDate, dueDate, bookID))
-    connection.commit()
-    return render_template('Success.html')
-    
-@app.route("Reserve.html/<bookID>")
-def reserve(bookID):
-    # update reserve status of book
-    sql_reserve_query = "UPDATE book SET reserveID=? WHERE _id=?"
-    cursor = connection.cursor()
-    cursor.execute(sql_reserve_query, (userID, bookID))
-    connection.commit()
-    return render_template('Sucesss.html')
-'''
 # final line
 if __name__ == "__main__":
     app.debug = True
