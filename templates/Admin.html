@@ -212,44 +212,48 @@
                 <div
                   class="u-expanded-width u-table u-table-responsive u-table-1"
                 >
-                  <table class="u-table-entity">
-                    <colgroup>
-                      <col width="25%" />
-                      <col width="25%" />
-                      <col width="25%" />
-                      <col width="25%" />
-                    </colgroup>
-                    <tbody class="u-table-alt-grey-5 u-table-body">
-                      <tr style="height: 51px">
-                        <td class="u-table-cell">Column 1</td>
-                        <td class="u-table-cell">Column 2</td>
-                        <td class="u-table-cell">Column 3</td>
-                        <td class="u-table-cell">Column 4</td>
+                  <table class="u-table-entity u-table-entity-1">
+                    <thead
+                      class="u-custom-font u-font-courier-new u-palette-4-base u-table-header u-table-header-1"
+                    >
+                      <tr style="height: 58px">
+                        <th class="u-table-cell">User ID</th>
+                        <th class="u-table-cell">First Name</th>
+                        <th class="u-table-cell">Last Name</th>
+                        <th class="u-table-cell">Book ID</th>
+                        <th class="u-table-cell">Title</th>
                       </tr>
-                      <tr style="height: 26px">
-                        <td class="u-table-cell">Row 1</td>
-                        <td class="u-table-cell">Description</td>
-                        <td class="u-table-cell">Description</td>
-                        <td class="u-table-cell">Description</td>
+                    </thead>
+                    <tbody class="u-table-body">
+                      {% for item in data_borrowed %}
+                      <tr style="height: 55px">
+                        <td
+                          class="u-border-1 u-border-grey-30 u-border-no-left u-border-no-right u-table-cell"
+                        >
+                          {{item[0]}}
+                        </td>
+                        <td
+                          class="u-border-1 u-border-grey-30 u-border-no-left u-border-no-right u-table-cell"
+                        >
+                          {{item[1]}}
+                        </td>
+                        <td
+                          class="u-border-1 u-border-grey-30 u-border-no-left u-border-no-right u-table-cell"
+                        >
+                          {{item[2]}}
+                        </td>
+                        <td
+                          class="u-border-1 u-border-grey-30 u-border-no-left u-border-no-right u-table-cell"
+                        >
+                          {{item[3]}}
+                        </td>
+                        <td
+                          class="u-border-1 u-border-grey-30 u-border-no-left u-border-no-right u-table-cell"
+                        >
+                          {{item[4]}}
+                        </td>
                       </tr>
-                      <tr style="height: 51px">
-                        <td class="u-table-cell">Row 2</td>
-                        <td class="u-table-cell">Description</td>
-                        <td class="u-table-cell">Description</td>
-                        <td class="u-table-cell">Description</td>
-                      </tr>
-                      <tr style="height: 51px">
-                        <td class="u-table-cell">Row 3</td>
-                        <td class="u-table-cell">Description</td>
-                        <td class="u-table-cell">Description</td>
-                        <td class="u-table-cell">Description</td>
-                      </tr>
-                      <tr style="height: 52px">
-                        <td class="u-table-cell">Row 4</td>
-                        <td class="u-table-cell">Description</td>
-                        <td class="u-table-cell">Description</td>
-                        <td class="u-table-cell">Description</td>
-                      </tr>
+                      {% endfor %}
                     </tbody>
                   </table>
                 </div>
@@ -266,44 +270,48 @@
                 <div
                   class="u-expanded-width u-table u-table-responsive u-table-2"
                 >
-                  <table class="u-table-entity">
-                    <colgroup>
-                      <col width="25%" />
-                      <col width="25%" />
-                      <col width="25%" />
-                      <col width="25%" />
-                    </colgroup>
-                    <tbody class="u-table-alt-grey-5 u-table-body">
-                      <tr style="height: 51px">
-                        <td class="u-table-cell">Column 1</td>
-                        <td class="u-table-cell">Column 2</td>
-                        <td class="u-table-cell">Column 3</td>
-                        <td class="u-table-cell">Column 4</td>
+                  <table class="u-table-entity u-table-entity-1">
+                    <thead
+                      class="u-custom-font u-font-courier-new u-palette-4-base u-table-header u-table-header-1"
+                    >
+                      <tr style="height: 58px">
+                        <th class="u-table-cell">User ID</th>
+                        <th class="u-table-cell">First Name</th>
+                        <th class="u-table-cell">Last Name</th>
+                        <th class="u-table-cell">Book ID</th>
+                        <th class="u-table-cell">Title</th>
                       </tr>
-                      <tr style="height: 26px">
-                        <td class="u-table-cell">Row 1</td>
-                        <td class="u-table-cell">Description</td>
-                        <td class="u-table-cell">Description</td>
-                        <td class="u-table-cell">Description</td>
+                    </thead>
+                    <tbody class="u-table-body">
+                      {% for item in data_reserved %}
+                      <tr style="height: 55px">
+                        <td
+                          class="u-border-1 u-border-grey-30 u-border-no-left u-border-no-right u-table-cell"
+                        >
+                          {{item[0]}}
+                        </td>
+                        <td
+                          class="u-border-1 u-border-grey-30 u-border-no-left u-border-no-right u-table-cell"
+                        >
+                          {{item[1]}}
+                        </td>
+                        <td
+                          class="u-border-1 u-border-grey-30 u-border-no-left u-border-no-right u-table-cell"
+                        >
+                          {{item[2]}}
+                        </td>
+                        <td
+                          class="u-border-1 u-border-grey-30 u-border-no-left u-border-no-right u-table-cell"
+                        >
+                          {{item[3]}}
+                        </td>
+                        <td
+                          class="u-border-1 u-border-grey-30 u-border-no-left u-border-no-right u-table-cell"
+                        >
+                          {{item[4]}}
+                        </td>
                       </tr>
-                      <tr style="height: 51px">
-                        <td class="u-table-cell">Row 2</td>
-                        <td class="u-table-cell">Description</td>
-                        <td class="u-table-cell">Description</td>
-                        <td class="u-table-cell">Description</td>
-                      </tr>
-                      <tr style="height: 51px">
-                        <td class="u-table-cell">Row 3</td>
-                        <td class="u-table-cell">Description</td>
-                        <td class="u-table-cell">Description</td>
-                        <td class="u-table-cell">Description</td>
-                      </tr>
-                      <tr style="height: 52px">
-                        <td class="u-table-cell">Row 4</td>
-                        <td class="u-table-cell">Description</td>
-                        <td class="u-table-cell">Description</td>
-                        <td class="u-table-cell">Description</td>
-                      </tr>
+                      {% endfor %}
                     </tbody>
                   </table>
                 </div>
@@ -320,44 +328,42 @@
                 <div
                   class="u-expanded-width u-table u-table-responsive u-table-3"
                 >
-                  <table class="u-table-entity">
-                    <colgroup>
-                      <col width="25%" />
-                      <col width="25%" />
-                      <col width="25%" />
-                      <col width="25%" />
-                    </colgroup>
-                    <tbody class="u-table-alt-grey-5 u-table-body">
-                      <tr style="height: 51px">
-                        <td class="u-table-cell">Column 1</td>
-                        <td class="u-table-cell">Column 2</td>
-                        <td class="u-table-cell">Column 3</td>
-                        <td class="u-table-cell">Column 4</td>
+                  <table class="u-table-entity u-table-entity-1">
+                    <thead
+                      class="u-custom-font u-font-courier-new u-palette-4-base u-table-header u-table-header-1"
+                    >
+                      <tr style="height: 58px">
+                        <th class="u-table-cell">User ID</th>
+                        <th class="u-table-cell">First Name</th>
+                        <th class="u-table-cell">Last Name</th>
+                        <th class="u-table-cell">Amount</th>
                       </tr>
-                      <tr style="height: 26px">
-                        <td class="u-table-cell">Row 1</td>
-                        <td class="u-table-cell">Description</td>
-                        <td class="u-table-cell">Description</td>
-                        <td class="u-table-cell">Description</td>
+                    </thead>
+                    <tbody class="u-table-body">
+                      {% for item in data_fine %}
+                      <tr style="height: 55px">
+                        <td
+                          class="u-border-1 u-border-grey-30 u-border-no-left u-border-no-right u-table-cell"
+                        >
+                          {{item[0]}}
+                        </td>
+                        <td
+                          class="u-border-1 u-border-grey-30 u-border-no-left u-border-no-right u-table-cell"
+                        >
+                          {{item[1]}}
+                        </td>
+                        <td
+                          class="u-border-1 u-border-grey-30 u-border-no-left u-border-no-right u-table-cell"
+                        >
+                          {{item[2]}}
+                        </td>
+                        <td
+                          class="u-border-1 u-border-grey-30 u-border-no-left u-border-no-right u-table-cell"
+                        >
+                          {{item[3]}}
+                        </td>
                       </tr>
-                      <tr style="height: 51px">
-                        <td class="u-table-cell">Row 2</td>
-                        <td class="u-table-cell">Description</td>
-                        <td class="u-table-cell">Description</td>
-                        <td class="u-table-cell">Description</td>
-                      </tr>
-                      <tr style="height: 51px">
-                        <td class="u-table-cell">Row 3</td>
-                        <td class="u-table-cell">Description</td>
-                        <td class="u-table-cell">Description</td>
-                        <td class="u-table-cell">Description</td>
-                      </tr>
-                      <tr style="height: 52px">
-                        <td class="u-table-cell">Row 4</td>
-                        <td class="u-table-cell">Description</td>
-                        <td class="u-table-cell">Description</td>
-                        <td class="u-table-cell">Description</td>
-                      </tr>
+                      {% endfor %}
                     </tbody>
                   </table>
                 </div>
