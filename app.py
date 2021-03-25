@@ -238,7 +238,7 @@ def fail():
     return render_template('Fail.html')
 
 
-@app.route("/Holding.html<ID>")
+@app.route("/Holding.html/<ID>")
 def holding(ID):
     cursor = connection.cursor()
     # get book title
