@@ -73,16 +73,16 @@
     <section class="u-clearfix u-section-2" id="sec-2268">
       <div class="u-clearfix u-sheet u-sheet-1">
         <div class="u-form u-form-1">
-          <form action="SENDTOSQLUSERTABLE" method="POST" class="u-clearfix u-form-spacing-10 u-form-vertical u-inner-form" style="padding: 10px;" source="custom" name="form-1">
+          <form action="SENDTOSQLUSERTABLE" method="POST" class="" style="padding: 10px;" source="custom" name="form-1">
             <input type="hidden" id="siteId" name="siteId" value="284921">
             <input type="hidden" id="pageId" name="pageId" value="284926">
             <div class="u-form-group">
               <label for="name-b2ab" class="u-form-control-hidden u-label">Name</label>
-              <input id="name-b2ab" name="name" class="u-border-1 u-border-grey-30 u-input u-input-rectangle u-white" required="required" spellcheck="false" type="text" placeholder="">
+              <input type="text" name="userID" id="userID" class="u-border-1 u-border-grey-30 u-input u-input-rectangle u-white" required="required" spellcheck="false" placeholder="Enter User ID" value={{ request.form.userID }}>
             </div>
             <div class="u-form-group u-form-group-2">
               <label for="text-e14f" class="u-form-control-hidden u-label"></label>
-              <input type="text" placeholder="Enter password here" id="text-e14f" name="text" class="u-border-1 u-border-grey-30 u-input u-input-rectangle u-white" spellcheck="false">
+              <input type="password" placeholder="Enter password" name="password" id="password" class="u-border-1 u-border-grey-30 u-input u-input-rectangle u-white" spellcheck="false" value={{ request.form.password }}>
             </div>
             <div class="u-form-group u-form-radiobutton u-form-group-3">
               <div class="u-form-radio-button-wrapper">
@@ -92,16 +92,16 @@
               </div>
             </div>
             <div class="u-align-right u-form-group u-form-submit">
-              <a href="#" class="u-btn u-btn-round u-btn-submit u-button-style u-hover-palette-1-dark-1 u-palette-1-base u-radius-50 u-btn-1">LOGIN<br>
+              <a href="Profile.html" class="u-btn u-btn-round u-btn-submit u-button-style u-hover-palette-1-dark-1 u-palette-1-base u-radius-50 u-btn-1">LOGIN<br>
               </a>
               <input type="submit" value="submit" class="u-form-control-hidden">
             </div>
-            <div class="u-form-send-message u-form-send-success"> Thank you! Your message has been sent. </div>
-            <div class="u-form-send-error u-form-send-message"> Unable to send your message. Please fix errors then try again. </div>
-            <input type="hidden" value="" name="recaptchaResponse">
           </form>
+          {% if error %}
+            <p class="error"><strong>Error:</strong> {{ error }}
+          {% endif %}
         </div>
-        <a href="#" class="u-btn u-btn-round u-button-style u-hover-palette-1-light-1 u-palette-1-base u-radius-50 u-btn-2">SIGNUP</a>
+        <a href="Signup.html" class="u-btn u-btn-round u-button-style u-hover-palette-1-light-1 u-palette-1-base u-radius-50 u-btn-2">SIGNUP</a>
       </div>
     </section>
     
