@@ -238,9 +238,13 @@ def fail():
     return render_template('Fail.html')
 
 
-@app.route("/Holding.html")
-def holding(ID, title):
+@app.route("/Holding.html<ID>")
+def holding(ID):
     cursor = connection.cursor()
+    # get book title
+    sql_title = "SELECT title FROM book WHERE bookID=?"
+    cursor.execute(sql_title, (ID))
+    title = cursor.fetchall()[0][0]
     # check whether book is borrowed
     sql_check_borrow = "SELECT borrowedBy FROM book WHERE bookID=?"
     cursor.execute(sql_check_borrow, (ID))
