@@ -8,77 +8,95 @@
 
 .u-section-1 .u-text-1 {
   font-weight: 700;
-  font-size: 2.25rem;
-  margin: 31px 630px 60px 0;
+  margin: 36px 701px 0 0;
 }
 
 @media (max-width: 1199px) {
   .u-section-1 .u-sheet-1 {
-    min-height: 624px;
+    min-height: 158px;
   }
 
   .u-section-1 .u-text-1 {
-    margin-top: -75px;
-    margin-right: 430px;
+    margin-top: 0;
+    margin-right: 501px;
   }
 }
 
 @media (max-width: 991px) {
   .u-section-1 .u-sheet-1 {
-    min-height: 506px;
+    min-height: 135px;
   }
 
   .u-section-1 .u-text-1 {
-    margin-top: -193px;
-    margin-right: 210px;
+    margin-top: -23px;
+    margin-right: 281px;
   }
 }
 
 @media (max-width: 767px) {
   .u-section-1 .u-sheet-1 {
-    min-height: 1278px;
+    min-height: 286px;
   }
 
   .u-section-1 .u-text-1 {
-    margin-top: 0;
-    margin-right: 30px;
+    margin-top: 128px;
+    margin-right: 101px;
   }
 }
 
 @media (max-width: 575px) {
   .u-section-1 .u-sheet-1 {
-    min-height: 850px;
+    min-height: 202px;
   }
 
   .u-section-1 .u-text-1 {
-    font-size: 1.5rem;
-    margin-top: -214px;
+    margin-top: 44px;
     margin-right: 0;
   }
-}.u-section-2 {
-  background-image: none;
-}
-
-.u-section-2 .u-sheet-1 {
-  min-height: 289px;
-}
-
-.u-section-2 .u-text-1 {
-  font-size: 3.75rem;
-  font-weight: 700;
-  margin: 60px 0 0;
-}
-
-.u-section-2 .u-btn-1 {
-  border-style: none;
-  text-transform: uppercase;
-  font-size: 0.875rem;
-  margin: 30px auto 60px 0;
-  padding: 8px 27px 8px 26px;
 }
 
 @media (max-width: 575px) {
-  .u-section-2 .u-text-1 {
-    font-size: 3rem;
+  .u-footer .u-sheet-1 {
+    min-height: 500px;
+  }
+
+  .u-footer .u-text-1 {
+    margin-top: 44px;
+    margin-right: 0;
   }
 }
+
+.u-section-2 .u-form-submit-1 {
+  height: 20px;
+  margin: 17px 17px 17px 17px;
+}
+
+.u-section-2 .u-form-submit-2 {
+  height: 20px;
+  margin: 17px 17px 17px 17px;
+}
+
+.u-section-2 .u-form-submit-3 {
+  height: 20px;
+  margin: 17px 17px 17px 17px;
+}
+
+.u-section-2 .u-form-submit-4 {
+  height: 20px;
+  margin: 17px 17px 17px 17px;
+}
+
+.wrapper {
+  text-align: right;
+}
+
+.u-btn-1 {
+  border-style: none;
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 1rem;
+  letter-spacing: 1px;
+  margin: -57px 165px 50px auto;
+  padding: 10px 27px 10px 26px;
+}
+ 
