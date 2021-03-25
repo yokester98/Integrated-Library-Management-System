@@ -295,17 +295,18 @@ def signup():
             flash('Passwords don\'t match.', category='error')
         else:
             cursor = connection.cursor()
-            mysql_user_count = "SELECT COUNT(*) FROM Library.User"
-    
-            new_user = User(userID=(cursor.execute(mysql_user_count)+1), firstName=firstName, lastName=lastName, password=generate_password_hash(
-                password1, method='sha256'))
-            db.session.add(new_user)
-            db.session.commit()
-            login_user(new_user, remember=True)
+            mysql_user_count = cursor.execute("SELECT COUNT(*) FROM User")
+            #  insert new user, with userID = no. of rows in User + 1 (idk if my way is correct)
+            mysql_insert_new_user = """INSERT INTO User (userID, firstName, lastName, password) 
+            VALUES (mysql_user_count + 1, firstName, lastName, password)"""
+            cursor.execute(mysql_insert_new_user)
+            connection.commit()
+
+            cursor.close()
             flash('Account created!', category='success')
             return redirect(url_for('Success'))
 
-    return render_template("Signup.html")
+    return render_template("Signup.html"
 
 @app.route('/', methods=['GET','POST'])
 def login():
