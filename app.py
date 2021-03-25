@@ -1,5 +1,5 @@
 # import dependencies
-from flask import Flask, render_template, redirect, url_for, request
+from flask import Flask, render_template, redirect, url_for, request, session, make_response, flash, Blueprint
 from pymongo import MongoClient
 import mysql.connector
 from mysql.connector import Error
@@ -7,8 +7,13 @@ import pandas as pd
 import json
 import datetime
 from datetime import datetime, timedelta
+from werkzeug.security import generate_password_hash, check_password_hash
+from flask_login import login_user, login_required, logout_user, current_user
+from flask_session import Session
 
 app = Flask(__name__)
+
+app.secret_key = "random string"
 
 # mongoDB connection
 mongodb = MongoClient('localhost', 27017)
@@ -36,13 +41,62 @@ finally:
         print("MySQL connection is closed")
 '''
 
-@app.route("/")
+@app.route('/', methods=['GET','POST'])
 def main():
+    if request.method == 'POST':
+        userID = request.form['userID']
+        password = request.form['password']
+
+        if "userID" in session:
+            userID = session['userID']
+            cursor = connection.cursor()
+            mysql_user_pw = "SELECT password FROM User WHERE userID=userID"
+            if check_password_hash(cursor.execute(mysql_user_pw), password):
+                session['loggedin'] = True
+                return redirect(url_for('Profile'))
+        
+        else:
+            flash('Invalid credentials. Please try again.')
     return render_template('Home.html')
 
 @app.route("/Home.html")
 def main2():
     return render_template('Home.html')
+
+@app.route('/Signup.html', methods=['GET','POST'])
+def signup():
+    if request.method == 'POST':
+        firstName = request.form.get('firstName')
+        lastName = request.form.get('lastName')
+        password1 = request.form.get('password1')
+        password2 = request.form.get('password2')
+
+        print(firstName, lastName, password1, password2)
+
+
+        if len(firstName) < 2:
+            flash('First name must be greater than 1 character.')
+        elif password1 != password2:
+            flash('Passwords don\'t match.')
+        else:
+            mysql_insert_new_user = "INSERT INTO user (firstName, lastName, password) VALUES ('{}', '{}', '{}')".format(firstName, lastName, password1)
+            cursor.execute(mysql_insert_new_user)
+            connection.commit()
+
+            flash('Account created!')
+            return render_template("Success.html")
+
+    return render_template("Signup.html")
+
+
+@app.route('/Logout.html')
+def logout():
+    session.pop('userID', None)
+    return redirect(url_for('Home'))
+
+@app.route('/Profile.html')
+def profile(user):
+    return render_template("Profile.html")
 
 @app.route('/Search.html', methods=['GET', 'POST'])
 def search():
@@ -145,35 +199,7 @@ def manage():
 
                     # delete borrow record from borrowed
                     cursor.execute("DELETE FROM borrowed WHERE bookID = {}".format(currentBookID))
-        
-        elif action == "Borrow":
-            # check if bookID exists in Borrowed
-            cursor.execute("SELECT COUNT(1) FROM Borrowed WHERE bookID = {}".format(currentBookID))
-            exist = cursor.fetchone()[0]
-            # check number of books borrowed 
-            cursor.execute("SELECT COUNT(1) FROM Borrowed WHERE userID = {}".format(userID))
-            numBorrowed = cursor.fetchone()[0]
-            # check existing fines
-            cursor.execute("SELECT amount FROM Fine WHERE userID = {}".format(userID))
-            amount = cursor.fetchone()[0]
-            if exist == 0 and numBorrowed < 4 and amount == 0:
-                currDate = date.today().strftime('%Y/%m/%d')
-                dueDate = currDate + datetime.timedelta(days=28)
-                # insert row into Borrowed
-                cursor.execute("INSERT into Borrowed values ({}, {}, {}, {})".format(currentBookID, userID, currDate, dueDate))
-        
-        elif action == "Reserve":
-            # check if book is reserved
-            cursor.execute("SELECT COUNT(1) FROM Reserved WHERE bookID = {}".format(currentBookID))
-            exist = cursor.fetchone()[0]
-            # check existing fines
-            cursor.execute("SELECT amount FROM Fine WHERE userID = {}".format(userID))
-            amount = cursor.fetchone()[0]
-            if exist == 0 and amount == 0:
-                currDate = date.today().strftime('%Y/%m/%d')
-                # insert row into Reserved
-                cursor.execute("INSERT into Reserved values ({}, {}, {})".format(currentBookID, userID, currDate))
-                
+
         connection.commit()
 
         headings = ("BookID", "Status", "Due/Available Date")
@@ -265,6 +291,56 @@ def success():
 def fail():
     return render_template('Fail.html')
 
+
+@app.route("/Holding.html")
+def holding(ID, title):
+    cursor = connection.cursor()
+    # check whether book is borrowed
+    sql_check_borrow = "SELECT borrowedBy FROM book WHERE bookID=?"
+    cursor.execute(sql_check_borrow, (ID))
+    borrow_row = cursor.fetchall()
+    if borrow_row[0][0] == null:
+        borrowed = No
+    else:
+        borrowed = Yes
+    # check whether book is reserved
+    sql_check_reserve = "SELECT reservedBy FROM book WHERE bookID=?"
+    cursor.execute(sql_check_reserve, (ID))
+    reserve_row = cursor.fetchall()
+    if reserve_row[0][0] == null:
+        reserved = No
+    else:
+        reserved = Yes
+    # check for outstanding fines
+    sql_check_fine = "SELECT amount FROM Fine WHERE userID=?"
+    cursor.execute(sql_check_fine, (userID))
+    amount = cursor.fetchall()[0][0]
+    # check number of books borrowed
+    sql_check_numBorrowed = "SELECT bookBorrowings FROM Users WHERE userID=?"
+    cursor.execute(sql_check_numBorrowed)
+    num_borrowed = cursor.fetchall()[0][0]
+    return render_template('Holding.html', bookID = ID, title = title, borrowed = borrowed, reserved = reserved, amount = amount, num_borrowed = num_borrowed)
+'''
+@app.route("Borrow.html/<bookID>")
+def borrow(bookID):
+    currDate = date.today().strftime('%Y/%m/%d')
+    dueDate = currDate + datetime.timedelta(days=28)
+    cursor = connection.cursor()
+    # update borrow status of book
+    sql_borrow_query = "UPDATE book SET borrowID=?, borrowDate=?, dueDate=? WHERE _id=?"
+    cursor.execute(sql_borrow_query, (userID, currDate, dueDate, bookID))
+    connection.commit()
+    return render_template('Success.html')
+    
+@app.route("Reserve.html/<bookID>")
+def reserve(bookID):
+    # update reserve status of book
+    sql_reserve_query = "UPDATE book SET reserveID=? WHERE _id=?"
+    cursor = connection.cursor()
+    cursor.execute(sql_reserve_query, (userID, bookID))
+    connection.commit()
+    return render_template('Sucesss.html')
+'''
 # final line
 if __name__ == "__main__":
     app.debug = True
