@@ -74,42 +74,34 @@ def login():
     if request.method == "POST":
         userID = request.form['userID']
         password = request.form['password']
+        action = request.form["action"]
         
         mysql_user_count = "SELECT COUNT(*) FROM User"
         cursor.execute(mysql_user_count)
         user_count = cursor.fetchone()[0]
+        
+        if action == "User":
+            cursor.execute("SELECT COUNT(1) FROM user WHERE userID = {}".format(userID))
+            count = cursor.fetchone()[0]
+            if count == 0:
+                return redirect(url_for("login"))
+            if int(userID) in range(1, user_count + 1):
+                mysql_user_pw = "SELECT password FROM user WHERE userID = {}".format(userID)
+                cursor.execute(mysql_user_pw)
+                pw = cursor.fetchone()[0]
+                # creates session if both userID and password are correct
+                if password == pw:
+                    session["userID"] = userID
+                    return redirect(url_for("profile"))
 
-        if int(userID) in range(1, user_count + 1):
-            mysql_user_pw = "SELECT password FROM user WHERE userID = {}".format(userID)
-            cursor.execute(mysql_user_pw)
-            pw = cursor.fetchone()[0]
-            # creates session if both userID and password are correct
-            if password == pw:
-                session["userID"] = userID
-                return redirect(url_for("profile"))
-                if "userID" in session:
-                    userID = session["userID"]
-
-                    mysql_lastName = "SELECT lastName FROM user WHERE userID = {}".format(userID)
-                    cursor.execute(mysql_lastName)
-                    lastname = cursor.fetchone()[0]
-
-                    mysql_borrowed = "SELECT COUNT(*) FROM borrowed WHERE userID = {}".format(userID)
-                    cursor.execute(mysql_borrowed)
-                    borrowed = cursor.fetchone()[0]
-                    
-                    mysql_reserved = "SELECT COUNT(*) FROM Reserved WHERE userID = {}".format(userID)
-                    cursor.execute(mysql_reserved)
-                    reserved = cursor.fetchone()[0]
-                    
-                    cursor.execute("SELECT COUNT(1) FROM fine WHERE userID = {}".format(userID))
-                    count = cursor.fetchone()
-                    if count:
-                        amt = count[0]
-                    else:
-                        amt = 0
-
-                    return render_template("Profile.html", userID=userID, lastName=lastname, borrowed=borrowed, reserved=reserved, amt=amt)
+        elif action == "Admin":
+            mysql_admin_query = "SELECT adminID, password FROM admin WHERE adminID = {}".format(userID)
+            cursor.execute(mysql_admin_query)
+            admin_data = cursor.fetchall()[0]
+            if admin_data:
+                if password == admin_data[1]:
+                    session["userID"] = userID
+                    return redirect(url_for("admin"))
 
     else:
         return render_template("Home.html")
@@ -126,6 +118,11 @@ def profile():
     # if logged in
     if "userID" in session:
         userID = session["userID"]
+
+        cursor.execute("SELECT COUNT(1) FROM user WHERE userID = {}".format(userID))
+        count = cursor.fetchone()[0]
+        if count == 0:
+            return redirect(url_for("login"))
 
         mysql_lastName = "SELECT lastName FROM user WHERE userID = {}".format(userID)
         cursor.execute(mysql_lastName)
@@ -148,13 +145,8 @@ def profile():
 
         return render_template("Profile.html", userID=userID, lastName=lastname, borrowed=borrowed, reserved=reserved, amt=amt)
 
-    return render_template("Home.html")
-'''
-@app.route('/Logout.html')
-def logout():
-    session.pop('userID', None)
-    return render_template('Home.html')
-'''
+    return redirect(url_for("login"))
+
 @app.route('/Search.html', methods=['GET', 'POST'])
 def search():
     if request.method == "POST":
@@ -182,6 +174,12 @@ def search():
 def manage():
     # check if user is logged in
     if len(session) == 0:
+        return redirect(url_for("login"))
+
+    # check if it is an admin who is logged in
+    cursor.execute("SELECT COUNT(1) FROM user WHERE userID = {}".format(session["userID"]))
+    count = cursor.fetchone()[0]
+    if count == 0:
         return redirect(url_for("login"))
 
     # Check if user has submitted any actions
@@ -342,7 +340,7 @@ def manage():
                 availDate = datetime.now().strftime('%Y-%m-%d')
             data.append([bookID, "Reserved", availDate])
         return render_template('Manage.html', data = data)
-    
+        
     headings = ("BookID", "Status", "Due/Available Date")
     data = []
     sql_getBorrowed_query = "SELECT bookID, borrowDate, dueDate FROM borrowed WHERE userID = {}".format(session["userID"])  # need to add global user var here
