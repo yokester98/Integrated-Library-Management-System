@@ -5,8 +5,7 @@ import mysql.connector
 from mysql.connector import Error
 import pandas as pd
 import json
-import datetime
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 
 app = Flask(__name__)
 
@@ -41,8 +40,10 @@ finally:
 
 @app.route('/', methods=['GET','POST'])
 def main():
-    return render_template('Home.html')
-
+    if len(session):
+        session.pop(session["userID"], None)
+    return redirect(url_for("login"))
+    
 @app.route("/Home.html")
 def main2():
     return render_template('Home.html')
@@ -138,7 +139,7 @@ def profile():
         cursor.execute(mysql_reserved)
         reserved = cursor.fetchone()[0]
         
-        cursor.execute("SELECT COUNT(1) FROM fine WHERE userID = {}".format(userID))
+        cursor.execute("SELECT amount FROM fine WHERE userID = {}".format(userID))
         count = cursor.fetchone()
         if count:
             amt = count[0]
@@ -179,6 +180,10 @@ def search():
 
 @app.route("/Manage.html", methods=["POST", "GET"])
 def manage():
+    # check if user is logged in
+    if len(session) == 0:
+        return redirect(url_for("login"))
+
     # Check if user has submitted any actions
     if request.method == "POST":
         now = datetime.now()
@@ -199,7 +204,14 @@ def manage():
             if action == "Convert":
                 cursor.execute("SELECT COUNT(1) FROM borrowed WHERE bookID = {}".format(currentBookID))
                 count = cursor.fetchone()[0]
-                if count:
+                # check existing fines
+                cursor.execute("SELECT amount FROM Fine WHERE userID = {}".format(session["userID"]))
+                finecount = cursor.fetchone()
+                if finecount:
+                    amount = finecount[0]
+                else:
+                    amount = 0
+                if amount > 0 or count:
                     # insert error message here
                     print("Error Converting Reserved book to Borrowed")
                 else:
@@ -219,6 +231,7 @@ def manage():
                 else:
                     if reservedBookRecord[0][0] == session["userID"]:   #need to add global user here
                         sql_updateReserved_query = "DELETE FROM reserved WHERE bookID = {}".format(currentBookID)
+                        print("DELETE")
                         cursor.execute(sql_updateReserved_query)
 
         elif action == "Extend" or action == "Return":
@@ -229,8 +242,15 @@ def manage():
             if action == "Extend" and borrowedBookRecord[0][1] == session["userID"]:  #need to add global user here
                 cursor.execute("SELECT COUNT(1) FROM reserved WHERE bookID = {}".format(currentBookID))
                 count = cursor.fetchone()[0]
+                # check existing fines
+                cursor.execute("SELECT amount FROM Fine WHERE userID = {}".format(session["userID"]))
+                finecount = cursor.fetchone()
+                if finecount:
+                    amount = finecount[0]
+                else:
+                    amount = 0
                 # Check if the current book is already being reserved
-                if count:
+                if amount > 0 or count:
                     # insert error message here
                     print("Error Extending Borrowed book")
                 else:
@@ -261,28 +281,37 @@ def manage():
             cursor.execute("SELECT COUNT(1) FROM Borrowed WHERE bookID = {}".format(currentBookID))
             exist = cursor.fetchone()[0]
             # check number of books borrowed 
-            cursor.execute("SELECT COUNT(1) FROM Borrowed WHERE userID = {}".format(userID))
+            cursor.execute("SELECT COUNT(1) FROM Borrowed WHERE userID = {}".format(session["userID"]))
             numBorrowed = cursor.fetchone()[0]
             # check existing fines
-            cursor.execute("SELECT amount FROM Fine WHERE userID = {}".format(userID))
-            amount = cursor.fetchone()[0]
+            cursor.execute("SELECT amount FROM Fine WHERE userID = {}".format(session["userID"]))
+            count = cursor.fetchone()
+            if count:
+                amount = count[0]
+            else:
+                amount = 0
             if exist == 0 and numBorrowed < 4 and amount == 0:
-                currDate = date.today().strftime('%Y/%m/%d')
-                dueDate = currDate + datetime.timedelta(days=28)
+                dueDate = now + timedelta(days=28)
+                dueDate_formatted = dueDate.strftime('%Y-%m-%d')
+                now_formatted = now.strftime('%Y-%m-%d')
                 # insert row into Borrowed
-                cursor.execute("INSERT into Borrowed values ({}, {}, {}, {})".format(currentBookID, userID, currDate, dueDate))
+                cursor.execute("INSERT into Borrowed VALUES ({}, {}, '{}', '{}')".format(currentBookID, session["userID"], now_formatted, dueDate_formatted))
         
         elif action == "Reserve":
             # check if book is reserved
             cursor.execute("SELECT COUNT(1) FROM Reserved WHERE bookID = {}".format(currentBookID))
             exist = cursor.fetchone()[0]
             # check existing fines
-            cursor.execute("SELECT amount FROM Fine WHERE userID = {}".format(userID))
-            amount = cursor.fetchone()[0]
+            cursor.execute("SELECT amount FROM Fine WHERE userID = {}".format(session["userID"]))
+            count = cursor.fetchone()
+            if count:
+                amount = count[0]
+            else:
+                amount = 0
             if exist == 0 and amount == 0:
-                currDate = date.today().strftime('%Y/%m/%d')
+                currDate = date.today().strftime('%Y-%m-%d')
                 # insert row into Reserved
-                cursor.execute("INSERT into Reserved values ({}, {}, {})".format(currentBookID, userID, currDate))
+                cursor.execute("INSERT into Reserved values ({}, {}, '{}')".format(currentBookID, session["userID"], currDate))
 
         connection.commit()
 
