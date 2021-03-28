@@ -81,8 +81,12 @@
             <h2 style="text-align:center;">Profile</h2>
             <hr>
             <div class="u-container-layout u-container-layout-1">
-                <h4 class="u-text u-text-1" style="text-align:center;">
-                {{ text }} {{ user }}</h4>
+                <h3 class="u-text u-text-1" style="text-align:center;">
+                  Hi there, {{lastName}} !
+                </h3>
+                <h4 class="u-text u-text-2" style="text-align:center;">
+                  <var>User ID: {{userID}}</var>
+                </h4>
                 <table class="u-table-entity">
                 <table style="border:1px solid #ccc;margin-left:auto;margin-right:auto;">
                     <colgroup>
@@ -92,15 +96,15 @@
                     <tbody class="u-table-alt-grey-5 u-table-body">
                         <tr style="height: 51px">
                             <td class="u-table-cell">Books Borrowed</td>
-                            <td class="u-table-cell">#</td>
+                            <td class="u-table-cell">{{borrowed}}</td>
                         </tr>
                         <tr style="height: 51px">
                             <td class="u-table-cell">Books Reserved</td>
-                            <td class="u-table-cell">#</td>
+                            <td class="u-table-cell">{{reserved}}</td>
                         </tr>
                         <tr style="height: 51px">
                             <td class="u-table-cell">Amount Payable</td>
-                            <td class="u-table-cell">#</td>
+                            <td class="u-table-cell">{{amt}}</td>
                         </tr>
                     </tbody>
                 </table>
