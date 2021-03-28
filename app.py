@@ -372,10 +372,20 @@ def manage():
 
 @app.route("/Payment.html")
 def payment():
-    '''now = datetime.now()
+    now = datetime.now()
     formatted_now = now.strftime('%Y-%m-%d')
+    # get amount payable
+    amountPaid_query = "SELECT amount FROM fine WHERE userID = {}".format(session["userID"])
+    cursor.execute(amountPaid_query)
+    amountPaid = cursor.fetchone()[0]
+    #insert into payment table
     sql_deleteFineEntry_query = "DELETE FROM fine WHERE userID = {}".format(session["userID"])
-    sql_insertPayment_query = "INSERT INTO payment (receiptNum, amountPaid, userID, datePaid) VALUES ({}, {}, {}, {})".format()'''
+    cursor.execute(sql_deleteFineEntry_query)
+    connection.commit()    
+    #delete row from fine table
+    sql_insertPayment_query = "INSERT INTO payment (amountPaid, userID, datePaid) VALUES ({}, {}, '{}')".format(amountPaid, session["userID"], formatted_now)
+    cursor.execute(sql_insertPayment_query)
+    connection.commit()    
     return render_template('Payment.html')
 
 @app.route("/Admin.html")
