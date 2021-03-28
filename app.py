@@ -229,7 +229,7 @@ def manage():
                 if len(reservedBookRecord) == 0:
                     print("Reserved Book not found")
                 else:
-                    if reservedBookRecord[0][0] == int(session["userID"]):   #need to add global user here
+                    if reservedBookRecord[0] == session["userID"]:   #need to add global user here
                         sql_updateReserved_query = "DELETE FROM reserved WHERE bookID = {}".format(currentBookID)
                         cursor.execute(sql_updateReserved_query)
 
@@ -238,7 +238,7 @@ def manage():
             cursor.execute(sql_getBorrowedBook_query)
             borrowedBookRecord = cursor.fetchall()
 
-            if action == "Extend" and borrowedBookRecord[0][1] == int(session["userID"]):  #need to add global user here
+            if action == "Extend" and borrowedBookRecord[0][1] == session["userID"]:  #need to add global user here
                 cursor.execute("SELECT COUNT(1) FROM reserved WHERE bookID = {}".format(currentBookID))
                 count = cursor.fetchone()[0]
                 # check existing fines
@@ -253,15 +253,13 @@ def manage():
                     # insert error message here
                     print("Error Extending Borrowed book")
                 else:
-                    print("Extended borrowed book")
                     dueDate = now + timedelta(days=28)
                     formatted_date = dueDate.strftime('%Y-%m-%d')
                     sql_updateBorrowed_query = "UPDATE borrowed SET dueDate = '{}' WHERE bookID = {}".format(formatted_date, currentBookID)
                     cursor.execute(sql_updateBorrowed_query)
 
             elif action == "Return":
-                if borrowedBookRecord[0][1] == int(session["userID"]): #need to add global user here
-                    print("Returned borrowed book")
+                if borrowedBookRecord[0] == session["userID"]: #need to add global user here
                     dueDate = borrowedBookRecord[0][3]
                     delta = now.date() - dueDate
                     if delta.days > 0:
@@ -371,27 +369,22 @@ def manage():
 
     return render_template('Manage.html', data = data)
 
-@app.route("/Payment.html", methods=["POST", "GET"])
+@app.route("/Payment.html")
 def payment():
-    if request.method == "POST":
-        now = datetime.now()
-        formatted_now = now.strftime('%Y-%m-%d')
-        print(formatted_now)
-        # get amount payable
-        amountPaid_query = "SELECT amount FROM fine WHERE userID = {}".format(session["userID"])
-        cursor.execute(amountPaid_query)
-        amountPaid = cursor.fetchone()[0]
-        print(amountPaid)
-        #insert into payment table
-        sql_deleteFineEntry_query = "DELETE FROM fine WHERE userID = {}".format(session["userID"])
-        cursor.execute(sql_deleteFineEntry_query)
-        connection.commit()
-
-        #delete row from fine table
-        sql_insertPayment_query = "INSERT INTO payment (amountPaid, userID, datePaid) VALUES ({}, {}, '{}')".format(amountPaid, session["userID"], formatted_now)
-        cursor.execute(sql_insertPayment_query)
-        connection.commit()
-        return redirect(url_for('profile'))  
+    now = datetime.now()
+    formatted_now = now.strftime('%Y-%m-%d')
+    # get amount payable
+    amountPaid_query = "SELECT amount FROM fine WHERE userID = {}".format(session["userID"])
+    cursor.execute(amountPaid_query)
+    amountPaid = cursor.fetchone()[0]
+    #insert into payment table
+    sql_deleteFineEntry_query = "DELETE FROM fine WHERE userID = {}".format(session["userID"])
+    cursor.execute(sql_deleteFineEntry_query)
+    connection.commit()    
+    #delete row from fine table
+    sql_insertPayment_query = "INSERT INTO payment (amountPaid, userID, datePaid) VALUES ({}, {}, '{}')".format(amountPaid, session["userID"], formatted_now)
+    cursor.execute(sql_insertPayment_query)
+    connection.commit()    
     return render_template('Payment.html')
 
 @app.route("/Admin.html")
@@ -415,7 +408,10 @@ def admin():
 
 @app.route("/Success.html")
 def success():
-    return render_template('Success.html')
+    mysql_user_count = "SELECT COUNT(*) FROM User"
+    cursor.execute(mysql_user_count)
+    userID = cursor.fetchone()[0]
+    return render_template('Success.html', userID=userID)
 
 @app.route("/Fail.html")
 def fail():
