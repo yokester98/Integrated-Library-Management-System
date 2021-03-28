@@ -196,6 +196,34 @@ def manage():
                     # delete borrow record from borrowed
                     cursor.execute("DELETE FROM borrowed WHERE bookID = {}".format(currentBookID))
 
+        elif action == "Borrow":
+            # check if bookID exists in Borrowed
+            cursor.execute("SELECT COUNT(1) FROM Borrowed WHERE bookID = {}".format(currentBookID))
+            exist = cursor.fetchone()[0]
+            # check number of books borrowed 
+            cursor.execute("SELECT COUNT(1) FROM Borrowed WHERE userID = {}".format(userID))
+            numBorrowed = cursor.fetchone()[0]
+            # check existing fines
+            cursor.execute("SELECT amount FROM Fine WHERE userID = {}".format(userID))
+            amount = cursor.fetchone()[0]
+            if exist == 0 and numBorrowed < 4 and amount == 0:
+                currDate = date.today().strftime('%Y/%m/%d')
+                dueDate = currDate + datetime.timedelta(days=28)
+                # insert row into Borrowed
+                cursor.execute("INSERT into Borrowed values ({}, {}, {}, {})".format(currentBookID, userID, currDate, dueDate))
+        
+        elif action == "Reserve":
+            # check if book is reserved
+            cursor.execute("SELECT COUNT(1) FROM Reserved WHERE bookID = {}".format(currentBookID))
+            exist = cursor.fetchone()[0]
+            # check existing fines
+            cursor.execute("SELECT amount FROM Fine WHERE userID = {}".format(userID))
+            amount = cursor.fetchone()[0]
+            if exist == 0 and amount == 0:
+                currDate = date.today().strftime('%Y/%m/%d')
+                # insert row into Reserved
+                cursor.execute("INSERT into Reserved values ({}, {}, {})".format(currentBookID, userID, currDate))
+
         connection.commit()
 
         headings = ("BookID", "Status", "Due/Available Date")
