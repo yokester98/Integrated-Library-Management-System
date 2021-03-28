@@ -70,33 +70,30 @@ def signup():
 
 @app.route("/Home.html", methods=["POST","GET"])
 def login():
-    if request.method == 'POST':
-        print
+    if request.method == "POST":
         userID = request.form['userID']
         password = request.form['password']
         
         mysql_user_count = "SELECT COUNT(*) FROM User"
         cursor.execute(mysql_user_count)
         user_count = cursor.fetchone()[0]
-        
-        print(userID)
 
-        if userID in range(1, user_count + 1):
-            mysql_user_pw = "SELECT password FROM User WHERE userID = {}".format(userID)
+        if int(userID) in range(1, user_count + 1):
+            mysql_user_pw = "SELECT password FROM user WHERE userID = {}".format(userID)
+            cursor.execute(mysql_user_pw)
             pw = cursor.fetchone()[0]
-
             # creates session if both userID and password are correct
             if password == pw:
                 session["userID"] = userID
-                print(session["userID"])
+                return redirect(url_for("profile"))
                 if "userID" in session:
                     userID = session["userID"]
 
-                    mysql_lastName = "SELECT lastName FROM User WHERE userID = {}".format(userID)
+                    mysql_lastName = "SELECT lastName FROM user WHERE userID = {}".format(userID)
                     cursor.execute(mysql_lastName)
                     lastname = cursor.fetchone()[0]
 
-                    mysql_borrowed = "SELECT COUNT(*) FROM Borrowed WHERE userID = {}".format(userID)
+                    mysql_borrowed = "SELECT COUNT(*) FROM borrowed WHERE userID = {}".format(userID)
                     cursor.execute(mysql_borrowed)
                     borrowed = cursor.fetchone()[0]
                     
@@ -104,26 +101,36 @@ def login():
                     cursor.execute(mysql_reserved)
                     reserved = cursor.fetchone()[0]
                     
-                    mysql_amt = "SELECT amount FROM Fine WHERE userID = {}".format(userID)
-                    cursor.execute(mysql_amt)
-                    amt = cursor.fetchone()[0]
+                    cursor.execute("SELECT COUNT(1) FROM fine WHERE userID = {}".format(userID))
+                    count = cursor.fetchone()
+                    if count:
+                        amt = count[0]
+                    else:
+                        amt = 0
 
                     return render_template("Profile.html", userID=userID, lastName=lastname, borrowed=borrowed, reserved=reserved, amt=amt)
 
     else:
         return render_template("Home.html")
 
-@app.route("/Profile.html", methods=["POST", "GET"])
+@app.route("/Profile.html", methods = ["POST", "GET"])
 def profile():
+    # check if user wants to logout
+    if request.method == "POST":
+        session.pop(session["userID"], None)
+        print(len(session))
+        print(session["userID"])
+        return redirect(url_for("login"))
+
     # if logged in
     if "userID" in session:
         userID = session["userID"]
 
-        mysql_lastName = "SELECT lastName FROM User WHERE userID = {}".format(userID)
+        mysql_lastName = "SELECT lastName FROM user WHERE userID = {}".format(userID)
         cursor.execute(mysql_lastName)
         lastname = cursor.fetchone()[0]
 
-        mysql_borrowed = "SELECT COUNT(*) FROM Borrowed WHERE userID = {}".format(userID)
+        mysql_borrowed = "SELECT COUNT(*) FROM borrowed WHERE userID = {}".format(userID)
         cursor.execute(mysql_borrowed)
         borrowed = cursor.fetchone()[0]
         
@@ -131,20 +138,22 @@ def profile():
         cursor.execute(mysql_reserved)
         reserved = cursor.fetchone()[0]
         
-        mysql_amt = "SELECT amount FROM Fine WHERE userID = {}".format(userID)
-        cursor.execute(mysql_amt)
-        amt = cursor.fetchone()[0]
+        cursor.execute("SELECT COUNT(1) FROM fine WHERE userID = {}".format(userID))
+        count = cursor.fetchone()
+        if count:
+            amt = count[0]
+        else:
+            amt = 0
 
-        return render_template("Profile.html", userID=userID, lastname=lastname, borrowed=borrowed, reserved=reserved, amt=amt)
-    
-    else:
-        return render_template("Home.html")
+        return render_template("Profile.html", userID=userID, lastName=lastname, borrowed=borrowed, reserved=reserved, amt=amt)
 
+    return render_template("Home.html")
+'''
 @app.route('/Logout.html')
 def logout():
     session.pop('userID', None)
     return render_template('Home.html')
-
+'''
 @app.route('/Search.html', methods=['GET', 'POST'])
 def search():
     if request.method == "POST":
@@ -178,7 +187,7 @@ def manage():
         currentBookID = request.form["bookID"]
         action = request.form["action"]
 
-        sql_getfine_query = "SELECT userID, amount FROM fine WHERE userID = {}".format(2)     #need to add global user here
+        sql_getfine_query = "SELECT userID, amount FROM fine WHERE userID = {}".format(session["userID"])     #need to add global user here
         cursor.execute(sql_getfine_query)
         fineRecord = cursor.fetchall()
 
@@ -194,12 +203,12 @@ def manage():
                     # insert error message here
                     print("Error Converting Reserved book to Borrowed")
                 else:
-                    cursor.execute("SELECT COUNT(*) FROM borrowed WHERE userID = {}".format(2))  #need to add global user here
+                    cursor.execute("SELECT COUNT(*) FROM borrowed WHERE userID = {}".format(session["userID"]))  #need to add global user here
                     count = cursor.fetchone()[0]
                     if reservedBookRecord[0][0] == 2 and count < 4:
                         dueDate = now.date() + timedelta(days=28)
                         formatted_date = dueDate.strftime('%Y-%m-%d')
-                        sql_updateBorrowed_query = "INSERT INTO borrowed VALUES ({}, {}, '{}', '{}')".format(currentBookID, 2, formatted_now, formatted_date) #need to add global user here
+                        sql_updateBorrowed_query = "INSERT INTO borrowed VALUES ({}, {}, '{}', '{}')".format(currentBookID, session["userID"], formatted_now, formatted_date) #need to add global user here
                         sql_updateReserved_query = "DELETE FROM reserved WHERE bookID = {}".format(currentBookID)
                         cursor.execute(sql_updateBorrowed_query)
                         cursor.execute(sql_updateReserved_query)
@@ -208,7 +217,7 @@ def manage():
                 if len(reservedBookRecord) == 0:
                     print("Reserved Book not found")
                 else:
-                    if reservedBookRecord[0][0] == 2:   #need to add global user here
+                    if reservedBookRecord[0][0] == session["userID"]:   #need to add global user here
                         sql_updateReserved_query = "DELETE FROM reserved WHERE bookID = {}".format(currentBookID)
                         cursor.execute(sql_updateReserved_query)
 
@@ -217,7 +226,7 @@ def manage():
             cursor.execute(sql_getBorrowedBook_query)
             borrowedBookRecord = cursor.fetchall()
 
-            if action == "Extend" and borrowedBookRecord[0][1] == 2:  #need to add global user here
+            if action == "Extend" and borrowedBookRecord[0][1] == session["userID"]:  #need to add global user here
                 cursor.execute("SELECT COUNT(1) FROM reserved WHERE bookID = {}".format(currentBookID))
                 count = cursor.fetchone()[0]
                 # Check if the current book is already being reserved
@@ -231,17 +240,17 @@ def manage():
                     cursor.execute(sql_updateBorrowed_query)
 
             elif action == "Return":
-                if borrowedBookRecord[0][1] == 2: #need to add global user here
+                if borrowedBookRecord[0][1] == session["userID"]: #need to add global user here
                     dueDate = borrowedBookRecord[0][3]
                     delta = now.date() - dueDate
                     if delta.days > 0:
-                        cursor.execute("SELECT COUNT(1) FROM fine WHERE userID = {}".format(2))  # need to add global user here
+                        cursor.execute("SELECT COUNT(1) FROM fine WHERE userID = {}".format(session["userID"]))  # need to add global user here
                         count = cursor.fetchone()[0]
                         if count:  
-                            sql_updateFine_query = "UPDATE fine SET amount = {} WHERE userID = {}".format(fineRecord[0][1] + delta.days, 2)  #need to add global user here
+                            sql_updateFine_query = "UPDATE fine SET amount = {} WHERE userID = {}".format(fineRecord[0][1] + delta.days, session["userID"])  #need to add global user here
                             cursor.execute(sql_updateFine_query)
                         else:
-                            sql_insertFine_query = "INSERT INTO fine VALUES ({}, {})".format(2, delta.days)  # need to add global user here
+                            sql_insertFine_query = "INSERT INTO fine VALUES ({}, {})".format(session["userID"], delta.days)  # need to add global user here
                             cursor.execute(sql_insertFine_query)
 
                     # delete borrow record from borrowed
@@ -279,11 +288,11 @@ def manage():
 
         headings = ("BookID", "Status", "Due/Available Date")
         data = []
-        sql_getBorrowed_query = "SELECT bookID, borrowDate, dueDate FROM borrowed WHERE userID = {}".format(2)  # need to add global user var here
+        sql_getBorrowed_query = "SELECT bookID, borrowDate, dueDate FROM borrowed WHERE userID = {}".format(session["userID"])  # need to add global user var here
         cursor.execute(sql_getBorrowed_query)
         borrowed_records = cursor.fetchall()
 
-        sql_getReserved_query = "SELECT bookID, reserveDate FROM reserved WHERE userID = {}".format(2)  # need to add global user var here
+        sql_getReserved_query = "SELECT bookID, reserveDate FROM reserved WHERE userID = {}".format(session["userID"])  # need to add global user var here
         cursor.execute(sql_getReserved_query)
         reserved_records = cursor.fetchall()
 
@@ -306,11 +315,11 @@ def manage():
     
     headings = ("BookID", "Status", "Due/Available Date")
     data = []
-    sql_getBorrowed_query = "SELECT bookID, borrowDate, dueDate FROM borrowed WHERE userID = {}".format(2)  # need to add global user var here
+    sql_getBorrowed_query = "SELECT bookID, borrowDate, dueDate FROM borrowed WHERE userID = {}".format(session["userID"])  # need to add global user var here
     cursor.execute(sql_getBorrowed_query)
     borrowed_records = cursor.fetchall()
 
-    sql_getReserved_query = "SELECT bookID, reserveDate FROM reserved WHERE userID = {}".format(2)  # need to add global user var here
+    sql_getReserved_query = "SELECT bookID, reserveDate FROM reserved WHERE userID = {}".format(session["userID"])  # need to add global user var here
     cursor.execute(sql_getReserved_query)
     reserved_records = cursor.fetchall()
 
@@ -336,7 +345,7 @@ def manage():
 def payment():
     '''now = datetime.now()
     formatted_now = now.strftime('%Y-%m-%d')
-    sql_deleteFineEntry_query = "DELETE FROM fine WHERE userID = {}"
+    sql_deleteFineEntry_query = "DELETE FROM fine WHERE userID = {}".format(session["userID"])
     sql_insertPayment_query = "INSERT INTO payment (receiptNum, amountPaid, userID, datePaid) VALUES ({}, {}, {}, {})".format()'''
     return render_template('Payment.html')
 
@@ -355,7 +364,7 @@ def admin():
     cursor.execute(sql_getAllFine_query)
     data_fine = cursor.fetchall()
 
-    return render_template('Admin.html', userID=userID, data_borrowed = data_borrowed, data_reserved = data_reserved, data_fine = data_fine)
+    return render_template('Admin.html', data_borrowed = data_borrowed, data_reserved = data_reserved, data_fine = data_fine)
 
 
 

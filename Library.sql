@@ -7,6 +7,14 @@ USE Library;
 SET NAMES utf8 ;
 SET character_set_client = utf8mb4 ;
 
+CREATE TABLE Admin (
+  userID 				int(7)	 		NOT NULL,
+  firstName				text			NOT NULL,
+  lastName				text			NOT NULL,
+  password				varchar(50) 	NOT NULL,
+  PRIMARY KEY (adminID)
+);
+
 CREATE TABLE User (
   userID 				int(7)	 		NOT NULL AUTO_INCREMENT,
   firstName				text			NOT NULL,
@@ -58,6 +66,9 @@ CREATE TABLE Reserved(
     PRIMARY KEY (bookID),
     FOREIGN KEY (bookID)    REFERENCES Book(bookID),
     FOREIGN KEY (userID)	REFERENCES User(userID));
+    
+    -- INSERT ADMIN DATA
+INSERT INTO Admin VALUES (8, 'admin', 'admin', 'abcd');
     
 	-- INSERT USER DATA
 INSERT INTO User VALUES (1, 'Radell', 'Ng', 'abcd');
