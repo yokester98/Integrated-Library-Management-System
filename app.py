@@ -71,6 +71,7 @@ def signup():
 @app.route("/Home.html", methods=["POST","GET"])
 def login():
     if request.method == 'POST':
+        print
         userID = request.form['userID']
         password = request.form['password']
         
@@ -78,6 +79,8 @@ def login():
         cursor.execute(mysql_user_count)
         user_count = cursor.fetchone()[0]
         
+        print(userID)
+
         if userID in range(1, user_count + 1):
             mysql_user_pw = "SELECT password FROM User WHERE userID = {}".format(userID)
             pw = cursor.fetchone()[0]
@@ -85,7 +88,55 @@ def login():
             # creates session if both userID and password are correct
             if password == pw:
                 session["userID"] = userID
-                return render_template("Profile.html")
+                print(session["userID"])
+                if "userID" in session:
+                    userID = session["userID"]
+
+                    mysql_lastName = "SELECT lastName FROM User WHERE userID = {}".format(userID)
+                    cursor.execute(mysql_lastName)
+                    lastname = cursor.fetchone()[0]
+
+                    mysql_borrowed = "SELECT COUNT(*) FROM Borrowed WHERE userID = {}".format(userID)
+                    cursor.execute(mysql_borrowed)
+                    borrowed = cursor.fetchone()[0]
+                    
+                    mysql_reserved = "SELECT COUNT(*) FROM Reserved WHERE userID = {}".format(userID)
+                    cursor.execute(mysql_reserved)
+                    reserved = cursor.fetchone()[0]
+                    
+                    mysql_amt = "SELECT amount FROM Fine WHERE userID = {}".format(userID)
+                    cursor.execute(mysql_amt)
+                    amt = cursor.fetchone()[0]
+
+                    return render_template("Profile.html", userID=userID, lastName=lastname, borrowed=borrowed, reserved=reserved, amt=amt)
+
+    else:
+        return render_template("Home.html")
+
+@app.route("/Profile.html", methods=["POST", "GET"])
+def profile():
+    # if logged in
+    if "userID" in session:
+        userID = session["userID"]
+
+        mysql_lastName = "SELECT lastName FROM User WHERE userID = {}".format(userID)
+        cursor.execute(mysql_lastName)
+        lastname = cursor.fetchone()[0]
+
+        mysql_borrowed = "SELECT COUNT(*) FROM Borrowed WHERE userID = {}".format(userID)
+        cursor.execute(mysql_borrowed)
+        borrowed = cursor.fetchone()[0]
+        
+        mysql_reserved = "SELECT COUNT(*) FROM Reserved WHERE userID = {}".format(userID)
+        cursor.execute(mysql_reserved)
+        reserved = cursor.fetchone()[0]
+        
+        mysql_amt = "SELECT amount FROM Fine WHERE userID = {}".format(userID)
+        cursor.execute(mysql_amt)
+        amt = cursor.fetchone()[0]
+
+        return render_template("Profile.html", userID=userID, lastname=lastname, borrowed=borrowed, reserved=reserved, amt=amt)
+    
     else:
         return render_template("Home.html")
 
@@ -306,32 +357,7 @@ def admin():
 
     return render_template('Admin.html', userID=userID, data_borrowed = data_borrowed, data_reserved = data_reserved, data_fine = data_fine)
 
-@app.route("/Profile.html", methods=["POST", "GET"])
-def profile():
-    # if logged in
-    if "userID" in session:
-        userID = session["userID"]
 
-        mysql_lastName = "SELECT lastName FROM User WHERE userID = {}".format(userID)
-        cursor.execute(mysql_lastName)
-        lastname = cursor.fetchone()[0]
-
-        mysql_borrowed = "SELECT COUNT(*) FROM Borrowed WHERE userID = {}".format(userID)
-        cursor.execute(mysql_borrowed)
-        borrowed = cursor.fetchone()[0]
-        
-        mysql_reserved = "SELECT COUNT(*) FROM Reserved WHERE userID = {}".format(userID)
-        cursor.execute(mysql_reserved)
-        reserved = cursor.fetchone()[0]
-        
-        mysql_amt = "SELECT amount FROM Fine WHERE userID = {}".format(userID)
-        cursor.execute(mysql_amt)
-        amt = cursor.fetchone()[0]
-
-        return render_template("Profile.html", userID=userID, lastname=lastname, borrowed=borrowed, reserved=reserved, amt=amt)
-    
-    else:
-        return render_template("Home.html")
 
 @app.route("/Success.html")
 def success():

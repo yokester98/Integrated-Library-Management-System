@@ -73,16 +73,16 @@
     <section class="u-clearfix u-section-2" id="sec-2268">
       <div class="u-clearfix u-sheet u-sheet-1">
         <div class="u-form u-form-1">
-          <form action="SENDTOSQLUSERTABLE" method="POST" class="" style="padding: 10px;" source="custom" name="form-1">
+          <form action="Profile.html" method="POST" class="" style="padding: 10px;" source="custom" name="form-1">
             <input type="hidden" id="siteId" name="siteId" value="284921">
             <input type="hidden" id="pageId" name="pageId" value="284926">
             <div class="u-form-group">
               <label for="name-b2ab" class="u-form-control-hidden u-label">Name</label>
-              <input type="text" name="userID" id="userID" class="u-border-1 u-border-grey-30 u-input u-input-rectangle u-white" required="required" spellcheck="false" placeholder="Enter User ID" value={{ request.form.userID }}>
+              <input type="text" name="userID" id="userID" class="u-border-1 u-border-grey-30 u-input u-input-rectangle u-white" required="required" spellcheck="false" placeholder="Enter UserID">
             </div>
             <div class="u-form-group u-form-group-2">
               <label for="text-e14f" class="u-form-control-hidden u-label"></label>
-              <input type="password" placeholder="Enter password" name="password" id="password" class="u-border-1 u-border-grey-30 u-input u-input-rectangle u-white" spellcheck="false" value={{ request.form.password }}>
+              <input type="password" placeholder="Enter password" name="password" id="password" class="u-border-1 u-border-grey-30 u-input u-input-rectangle u-white" spellcheck="false">
             </div>
             <div class="u-form-group u-form-radiobutton u-form-group-3">
               <div class="u-form-radio-button-wrapper">
@@ -94,7 +94,9 @@
             <div class="u-align-right u-form-group u-form-submit">
               <a href="Profile.html" class="u-btn u-btn-round u-btn-submit u-button-style u-hover-palette-1-dark-1 u-palette-1-base u-radius-50 u-btn-1">LOGIN<br>
               </a>
-              <input type="submit" value="submit" class="u-form-control-hidden">
+              <button type="submit" value="submit" class="u-form-control-hidden">
+                Submit
+              </button>
             </div>
           </form>
           {% if error %}
