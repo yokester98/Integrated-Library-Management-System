@@ -369,23 +369,33 @@ def manage():
 
     return render_template('Manage.html', data = data)
 
-@app.route("/Payment.html")
+@app.route("/Payment.html", methods=["POST", "GET"])
 def payment():
-    now = datetime.now()
-    formatted_now = now.strftime('%Y-%m-%d')
     # get amount payable
     amountPaid_query = "SELECT amount FROM fine WHERE userID = {}".format(session["userID"])
     cursor.execute(amountPaid_query)
     amountPaid = cursor.fetchone()[0]
-    #insert into payment table
-    sql_deleteFineEntry_query = "DELETE FROM fine WHERE userID = {}".format(session["userID"])
-    cursor.execute(sql_deleteFineEntry_query)
-    connection.commit()    
-    #delete row from fine table
-    sql_insertPayment_query = "INSERT INTO payment (amountPaid, userID, datePaid) VALUES ({}, {}, '{}')".format(amountPaid, session["userID"], formatted_now)
-    cursor.execute(sql_insertPayment_query)
-    connection.commit()    
-    return render_template('Payment.html')
+    print(amountPaid)
+
+    if request.method == "POST":
+        now = datetime.now()
+        formatted_now = now.strftime('%Y-%m-%d')
+        print(formatted_now)
+
+        #insert into payment table
+        sql_deleteFineEntry_query = "DELETE FROM fine WHERE userID = {}".format(session["userID"])
+        cursor.execute(sql_deleteFineEntry_query)
+        connection.commit()
+
+        #delete row from fine table
+        sql_insertPayment_query = "INSERT INTO payment (amountPaid, userID, datePaid) VALUES ({}, {}, '{}')".format(amountPaid, session["userID"], formatted_now)
+        cursor.execute(sql_insertPayment_query)
+        connection.commit()
+
+        
+
+        return redirect(url_for('profile'))    
+    return render_template('Payment.html', amountPaid = amountPaid)
 
 @app.route("/Admin.html")
 def admin():
@@ -408,10 +418,7 @@ def admin():
 
 @app.route("/Success.html")
 def success():
-    mysql_user_count = "SELECT COUNT(*) FROM User"
-    cursor.execute(mysql_user_count)
-    userID = cursor.fetchone()[0]
-    return render_template('Success.html', userID=userID)
+    return render_template('Success.html')
 
 @app.route("/Fail.html")
 def fail():
