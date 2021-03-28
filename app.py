@@ -1,5 +1,5 @@
 # import dependencies
-from flask import Flask, render_template, redirect, url_for, request
+from flask import Flask, render_template, redirect, url_for, request, session, make_response, flash, Blueprint
 from pymongo import MongoClient
 import mysql.connector
 from mysql.connector import Error
@@ -7,12 +7,11 @@ import pandas as pd
 import json
 import datetime
 from datetime import datetime, timedelta
-from werkzeug.security import generate_password_hash, check_password_hash
-from flask_login import login_user, login_required, logout_user, current_user
-
-
 
 app = Flask(__name__)
+
+# for session
+app.secret_key = "random string"
 
 # mongoDB connection
 mongodb = MongoClient('localhost', 27017)
@@ -21,18 +20,14 @@ collection = db.book
 
 # mySQL connection
 try:
-    connection = mysql.connector.connect(host='localhost',
-                                         database='Library',
-                                         user='root',
-                                         password=input("type password for mySQL here: "))
+    connection = mysql.connector.connect(host='localhost', database='Library', user='root', password=input("type password for mySQL here: "))
     if connection.is_connected():
         db_Info = connection.get_server_info()
         print("Connected to MySQL Server version ", db_Info)
-        cursor = connection.cursor()
+        cursor = connection.cursor(buffered=True)
         cursor.execute("select database();")
         record = cursor.fetchone()
         print("You're connected to database: ", record)
-
 except Error as e:
     print("Error while connecting to MySQL", e)
 
@@ -44,7 +39,7 @@ finally:
         print("MySQL connection is closed")
 '''
 
-@app.route("/")
+@app.route('/', methods=['GET','POST'])
 def main():
     return render_template('Home.html')
 
@@ -52,12 +47,52 @@ def main():
 def main2():
     return render_template('Home.html')
 
-@app.route('/')
-def index():
-    if 'username' in session:
-        username = session['username']
-        return 'Logged in as ' + username + '<br>' + "<b><a href = '/logout'>click here to log out</a></b>"
-    return "You are not logged in <br><a href = '/login'>" + "click here to log in</a>"
+@app.route('/Signup.html', methods=['GET','POST'])
+def signup():
+    if request.method == 'POST':
+        firstName = request.form.get('firstName')
+        lastName = request.form.get('lastName')
+        password1 = request.form.get('password1')
+        password2 = request.form.get('password2')
+
+        print(firstName, lastName, password1, password2)
+
+
+        if password1 != password2:
+            render_template("Fail.html")
+        else:
+            mysql_insert_new_user = "INSERT INTO user (firstName, lastName, password) VALUES ('{}', '{}', '{}')".format(firstName, lastName, password1)
+            cursor.execute(mysql_insert_new_user)
+            connection.commit()
+            return render_template("Success.html")
+
+    return render_template("Signup.html")
+
+@app.route("/Home.html", methods=["POST","GET"])
+def login():
+    if request.method == 'POST':
+        userID = request.form['userID']
+        password = request.form['password']
+        
+        mysql_user_count = "SELECT COUNT(*) FROM User"
+        cursor.execute(mysql_user_count)
+        user_count = cursor.fetchone()[0]
+        
+        if userID in range(1, user_count + 1):
+            mysql_user_pw = "SELECT password FROM User WHERE userID = {}".format(userID)
+            pw = cursor.fetchone()[0]
+
+            # creates session if both userID and password are correct
+            if password == pw:
+                session["userID"] = userID
+                return render_template("Profile.html")
+    else:
+        return render_template("Home.html")
+
+@app.route('/Logout.html')
+def logout():
+    session.pop('userID', None)
+    return render_template('Home.html')
 
 @app.route('/Search.html', methods=['GET', 'POST'])
 def search():
@@ -218,20 +253,63 @@ def manage():
 
     return render_template('Manage.html', data = data)
 
-
 @app.route("/Payment.html")
 def payment():
+    '''now = datetime.now()
+    formatted_now = now.strftime('%Y-%m-%d')
+    sql_deleteFineEntry_query = "DELETE FROM fine WHERE userID = {}"
+    sql_insertPayment_query = "INSERT INTO payment (receiptNum, amountPaid, userID, datePaid) VALUES ({}, {}, {}, {})".format()'''
     return render_template('Payment.html')
 
 @app.route("/Admin.html")
 def admin():
-    return render_template('Admin.html')
 
-@app.route("/Success.html", methods=["POST", "GET"])
+    sql_getAllBorrowings_query = "SELECT u.userID, firstName, lastName, br.bookID, title FROM user u JOIN borrowed br ON u.userID = br.userID JOIN book b ON br.bookID = b.bookID"
+    cursor.execute(sql_getAllBorrowings_query)
+    data_borrowed = cursor.fetchall()
+
+    sql_getAllReserved_query = "SELECT u.userID, firstName, lastName, r.bookID, title FROM user u JOIN reserved r ON u.userID = r.userID JOIN book b ON r.bookID = b.bookID"
+    cursor.execute(sql_getAllReserved_query)
+    data_reserved = cursor.fetchall()
+
+    sql_getAllFine_query = "SELECT u.userID, firstName, lastName, amount FROM user u JOIN fine f ON u.userID = f.userID"
+    cursor.execute(sql_getAllFine_query)
+    data_fine = cursor.fetchall()
+
+    return render_template('Admin.html', userID=userID, data_borrowed = data_borrowed, data_reserved = data_reserved, data_fine = data_fine)
+
+@app.route("/Profile.html", methods=["POST", "GET"])
+def profile():
+    # if logged in
+    if "userID" in session:
+        userID = session["userID"]
+
+        mysql_lastName = "SELECT lastName FROM User WHERE userID = {}".format(userID)
+        cursor.execute(mysql_lastName)
+        lastname = cursor.fetchone()[0]
+
+        mysql_borrowed = "SELECT COUNT(*) FROM Borrowed WHERE userID = {}".format(userID)
+        cursor.execute(mysql_borrowed)
+        borrowed = cursor.fetchone()[0]
+        
+        mysql_reserved = "SELECT COUNT(*) FROM Reserved WHERE userID = {}".format(userID)
+        cursor.execute(mysql_reserved)
+        reserved = cursor.fetchone()[0]
+        
+        mysql_amt = "SELECT amount FROM Fine WHERE userID = {}".format(userID)
+        cursor.execute(mysql_amt)
+        amt = cursor.fetchone()[0]
+
+        return render_template("Profile.html", userID=userID, lastname=lastname, borrowed=borrowed, reserved=reserved, amt=amt)
+    
+    else:
+        return render_template("Home.html")
+
+@app.route("/Success.html")
 def success():
     return render_template('Success.html')
 
-@app.route("/Fail.html", methods=["POST", "GET"])
+@app.route("/Fail.html")
 def fail():
     return render_template('Fail.html')
 
@@ -260,7 +338,7 @@ def holding(ID, title):
     cursor.execute(sql_check_fine, (userID))
     amount = cursor.fetchall()[0][0]
     # check number of books borrowed
-    sql_check_numBorrowed = "SELECT bookBorrowings FROM User WHERE userID=?"
+    sql_check_numBorrowed = "SELECT bookBorrowings FROM Users WHERE userID=?"
     cursor.execute(sql_check_numBorrowed)
     num_borrowed = cursor.fetchall()[0][0]
     return render_template('Holding.html', bookID = ID, title = title, borrowed = borrowed, reserved = reserved, amount = amount, num_borrowed = num_borrowed)
@@ -285,53 +363,7 @@ def reserve(bookID):
     connection.commit()
     return render_template('Sucesss.html')
 '''
-@app.route('/Signup.html', methods=['POST', 'GET'])
-def signup():
-    if request.method == 'POST':
-        firstName = request.form['firstName']
-        lastName = request.form['lastName']
-        password1 = request.form['password1']
-        password2 = request.form['password2']
-
-        if password1 != password2:
-            return redirect("http://127.0.0.1:5000/Fail.html")
-        else:
-            cursor = connection.cursor()
-            mysql_user_count = cursor.execute("SELECT COUNT(*) FROM User")
-            mysql_insert_new_user = """INSERT INTO User (userID, firstName, lastName, password) 
-            VALUES (cursor.execute(mysql_user_count) + 1, firstName, lastName, password)"""
-            cursor.execute(mysql_insert_new_user)
-            connection.commit()
-            cursor.close()
-            return redirect("http://127.0.0.1:5000/Success.html")
-
-    return render_template("Signup.html")
-
-@app.route('/Home.html')
-def login():
-    cursor = connection.cursor()
-    if request.method == 'POST':
-        userID = request.form.get('userID')
-        password = request.form.get('password')
-
-        mysql_user_count = "SELECT COUNT(*) FROM User"
-        
-        if userID > 0 and userID <= cursor.execute(mysql_user_count):
-            mysql_user_pw = "SELECT password FROM User WHERE userID=userID"
-            if check_password_hash(cursor.execute(mysql_user_pw), password):
-                flash('Logged in successfully!', category='success')
-                return redirect(url_for('Profile'))
-            else:
-                flash('Incorrect password, try again.', category='error')
-        else:
-            flash('User ID does not exist.', category='error')
-
-    return render_template("Home.html")
-
-@app.route('/Profile.html')
-def profile(user):
-    return render_template("Profile.html", text="Hi there, ", user="userID")
-    
 # final line
 if __name__ == "__main__":
+    app.debug = True
     app.run()
