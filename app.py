@@ -229,9 +229,8 @@ def manage():
                 if len(reservedBookRecord) == 0:
                     print("Reserved Book not found")
                 else:
-                    if reservedBookRecord[0][0] == session["userID"]:   #need to add global user here
+                    if reservedBookRecord[0] == session["userID"]:   #need to add global user here
                         sql_updateReserved_query = "DELETE FROM reserved WHERE bookID = {}".format(currentBookID)
-                        print("DELETE")
                         cursor.execute(sql_updateReserved_query)
 
         elif action == "Extend" or action == "Return":
@@ -260,7 +259,7 @@ def manage():
                     cursor.execute(sql_updateBorrowed_query)
 
             elif action == "Return":
-                if borrowedBookRecord[0][1] == session["userID"]: #need to add global user here
+                if borrowedBookRecord[0] == session["userID"]: #need to add global user here
                     dueDate = borrowedBookRecord[0][3]
                     delta = now.date() - dueDate
                     if delta.days > 0:
