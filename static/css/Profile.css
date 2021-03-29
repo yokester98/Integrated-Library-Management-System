@@ -59,7 +59,7 @@
   background-image: none;
 }
 
-.u-tab-content .u-btn-2 {
+.u-form-group-2 .u-btn-1 {
   border-style: none;
   font-weight: 700;
   text-transform: uppercase;
@@ -67,10 +67,14 @@
   letter-spacing: 1px;
   margin: -57px 165px 60px auto;
   padding: 10px 27px 10px 26px;
+  position: relative;
+  top: 100px;
+  left: 1000px;
 }
 
+
 @media (max-width: 1199px) {
-  .u-tab-content .u-btn-2 {
+  .u-form-group-2 .u-btn-1 {
     margin-right: 0;
   }
 }
