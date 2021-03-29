@@ -105,17 +105,21 @@
                 <path fill="currentColor" d="M4 8L0 4h8z"></path>
               </svg>
             </div>
-            <div class="u-align-right u-form-group u-form-submit">
+            <!-- <div class="u-align-right u-form-group u-form-submit"> -->
+            <div class="buttons">
               <button type="submit" value="LOGIN" class="u-btn u-btn-round u-btn-submit u-button-style u-hover-palette-1-dark-1 u-palette-1-base u-radius-50 u-btn-1">
                 LOGIN
               </button>
+              <a href="Signup.html" class="u-btn u-btn-round u-button-style u-hover-palette-1-light-1 u-palette-1-base u-radius-50 u-btn-1">SIGNUP</a>
+              {% for message in get_flashed_messages() %}
+                <p>{{ message }}</p>
+              {% endfor %}
             </div>
+            <!-- <div class="u-align-right u-form-group u-form-submit">
+              <a href="Signup.html" class="u-btn u-btn-round u-button-style u-hover-palette-1-light-1 u-palette-1-base u-radius-50 u-btn-1">SIGNUP</a>
+            </div> -->
           </form>
-          {% if error %}
-            <p class="error"><strong>Error:</strong> {{ error }}
-          {% endif %}
         </div>
-        <a href="Signup.html" class="u-btn u-btn-round u-button-style u-hover-palette-1-light-1 u-palette-1-base u-radius-50 u-btn-1">SIGNUP</a>
       </div>
     </section>
   </body>

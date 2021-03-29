@@ -96,6 +96,9 @@ def login():
                 if password == pw:
                     session["userID"] = userID
                     return redirect(url_for("profile"))
+                else:
+                    flash("Wrong password entered.")
+                    return render_template("Home.html")
 
         elif action == "Admin":
             mysql_admin_query = "SELECT adminID, password FROM admin WHERE adminID = {}".format(userID)

@@ -111,3 +111,13 @@
     margin-left: 0;
   }
 }
+
+  .buttons {  
+width: 200px;
+margin: 0 auto;
+display: inline;}
+
+  .action_btn {
+width: 200px;
+margin: 0 auto;
+display: inline;}
