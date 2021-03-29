@@ -21,7 +21,7 @@ CREATE TABLE User (
   lastName				text			NOT NULL,
   password				varchar(50) 	NOT NULL,
   PRIMARY KEY (userID)
-) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- BOOK
 CREATE TABLE Book(

@@ -65,7 +65,10 @@ def signup():
             mysql_insert_new_user = "INSERT INTO user (firstName, lastName, password) VALUES ('{}', '{}', '{}')".format(firstName, lastName, password1)
             cursor.execute(mysql_insert_new_user)
             connection.commit()
-            return render_template("Success.html")
+            cursor.execute("SELECT userID FROM user ORDER BY userID DESC LIMIT 1")
+            userID = cursor.fetchall()[0][0]
+            session["userID"] = userID
+            return redirect(url_for('success'))
 
     return render_template("Signup.html")
 
@@ -369,10 +372,20 @@ def manage():
 
 @app.route("/Payment.html", methods=["POST", "GET"])
 def payment():
+    # check if it is an admin who is logged in
+    cursor.execute("SELECT COUNT(1) FROM user WHERE userID = {}".format(session["userID"]))
+    count = cursor.fetchone()[0]
+    if count == 0:
+        return redirect(url_for("login"))
+
     # get amount payable
     amountPaid_query = "SELECT amount FROM fine WHERE userID = {}".format(session["userID"])
     cursor.execute(amountPaid_query)
-    amountPaid = cursor.fetchone()[0]
+    amountPaidData = cursor.fetchone()
+    if amountPaidData:
+        amountPaid = amountPaidData[0]
+    else:
+        amountPaid = 0
     print(amountPaid)
 
     if request.method == "POST":
@@ -416,7 +429,8 @@ def admin():
 
 @app.route("/Success.html")
 def success():
-    return render_template('Success.html')
+    userID = session["userID"]
+    return render_template('Success.html', userID = userID)
 
 @app.route("/Fail.html")
 def fail():
