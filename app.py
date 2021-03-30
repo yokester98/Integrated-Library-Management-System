@@ -55,7 +55,7 @@ def signup():
 
 
         if password1 != password2:
-            render_template("Fail.html")
+            flash("Passwords don't match.")
         else:
             mysql_insert_new_user = "INSERT INTO user (firstName, lastName, password) VALUES ('{}', '{}', '{}')".format(firstName, lastName, password1)
             cursor.execute(mysql_insert_new_user)
@@ -82,8 +82,9 @@ def login():
             cursor.execute("SELECT COUNT(1) FROM user WHERE userID = {}".format(userID))
             count = cursor.fetchone()[0]
             if count == 0:
-                return redirect(url_for("login"))
-            if int(userID) in range(1, user_count + 1):
+                flash("Incorrect userID/password.")
+                return render_template("Home.html")
+            elif int(userID) in range(1, user_count + 1):
                 mysql_user_pw = "SELECT password FROM user WHERE userID = {}".format(userID)
                 cursor.execute(mysql_user_pw)
                 pw = cursor.fetchone()[0]
@@ -92,17 +93,23 @@ def login():
                     session["userID"] = userID
                     return redirect(url_for("profile"))
                 else:
-                    flash("Wrong password entered.")
+                    flash("Incorrect userID/password.")
                     return render_template("Home.html")
 
         elif action == "Admin":
             mysql_admin_query = "SELECT adminID, password FROM admin WHERE adminID = {}".format(userID)
             cursor.execute(mysql_admin_query)
-            admin_data = cursor.fetchall()[0]
+            admin_data = cursor.fetchall()
             if admin_data:
-                if password == admin_data[1]:
+                if password == admin_data[0][1]:
                     session["userID"] = userID
                     return redirect(url_for("admin"))
+                else:
+                    flash("Incorrect adminID/password.")
+                    return render_template("Home.html")
+            else:
+                flash("Incorrect userID/password.")
+                return render_template("Home.html")
 
     else:
         return render_template("Home.html")
