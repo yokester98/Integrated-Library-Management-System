@@ -173,6 +173,7 @@
                         <th class="u-table-cell">Last Name</th>
                         <th class="u-table-cell">Book ID</th>
                         <th class="u-table-cell">Title</th>
+                        <th class="u-table-cell">Due Date</th>
                       </tr>
                     </thead>
                     <tbody class="u-table-body">
@@ -202,6 +203,11 @@
                           class="u-border-1 u-border-grey-30 u-border-no-left u-border-no-right u-table-cell"
                         >
                           {{item[4]}}
+                        </td>
+                        <td
+                          class="u-border-1 u-border-grey-30 u-border-no-left u-border-no-right u-table-cell"
+                        >
+                          {{item[5]}}
                         </td>
                       </tr>
                       {% endfor %}

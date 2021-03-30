@@ -42,10 +42,6 @@ finally:
 def main():
     session.clear()
     return redirect(url_for("login"))
-    
-@app.route("/Home.html")
-def main2():
-    return render_template('Home.html')
 
 @app.route('/Signup.html', methods=['GET','POST'])
 def signup():
@@ -215,7 +211,7 @@ def manage():
                     amount = 0
                 
                 if count:
-                    flash("Error Converting Reserved book to Borrowed, you did not reserve this book.")
+                    flash("Error Converting Reserved book to Borrowed, book has not been returned by another user.")
                 elif amount > 0:
                     # insert error message here
                     flash("Error Converting Reserved book to Borrowed, you have an outstanding fine.")
@@ -278,9 +274,11 @@ def manage():
                         if count:  
                             sql_updateFine_query = "UPDATE fine SET amount = {} WHERE userID = {}".format(fineRecord[0][1] + delta.days, session["userID"])  #need to add global user here
                             cursor.execute(sql_updateFine_query)
+                            cursor.execute("DELETE FROM reserved WHERE userID = {}".format(session["userID"]))
                         else:
                             sql_insertFine_query = "INSERT INTO fine VALUES ({}, {})".format(session["userID"], delta.days)  # need to add global user here
                             cursor.execute(sql_insertFine_query)
+                            cursor.execute("DELETE FROM reserved WHERE userID = {}".format(session["userID"]))
 
                     # delete borrow record from borrowed
                     cursor.execute("DELETE FROM borrowed WHERE bookID = {}".format(currentBookID))
@@ -324,10 +322,11 @@ def manage():
                 flash("Error Borrowing book, you have an outstanding fine.")
             elif numBorrowed >= 4:
                 flash("Error Borrowing book, you have borrowed a maximum of 4 books.")
-            elif reserve_user != "":
-                flash("Error Borrowing book, book is reserved by another user.")
             elif exist != 0:
                 flash("Error Borrowing book, book is already borrowed by another user.")
+            elif reserve_user != "":
+                flash("Error Borrowing book, book is reserved by another user.")
+
     
         elif action == "Reserve":
             # check if book is reserved
@@ -464,7 +463,7 @@ def payment():
 @app.route("/Admin.html")
 def admin():
 
-    sql_getAllBorrowings_query = "SELECT u.userID, firstName, lastName, br.bookID, title FROM user u JOIN borrowed br ON u.userID = br.userID JOIN book b ON br.bookID = b.bookID"
+    sql_getAllBorrowings_query = "SELECT u.userID, firstName, lastName, br.bookID, title, br.dueDate FROM user u JOIN borrowed br ON u.userID = br.userID JOIN book b ON br.bookID = b.bookID"
     cursor.execute(sql_getAllBorrowings_query)
     data_borrowed = cursor.fetchall()
 
