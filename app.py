@@ -40,8 +40,7 @@ finally:
 
 @app.route('/', methods=['GET','POST'])
 def main():
-    if len(session):
-        session.pop(session["userID"], None)
+    session.clear()
     return redirect(url_for("login"))
     
 @app.route("/Home.html")
@@ -116,9 +115,7 @@ def login():
 def profile():
     # check if user wants to logout
     if request.method == "POST":
-        session.pop(session["userID"], None)
-        print(len(session))
-        print(session["userID"])
+        session.clear()
         return redirect(url_for("login"))
 
     # if logged in
@@ -298,28 +295,40 @@ def manage():
             # check existing fines
             cursor.execute("SELECT amount FROM Fine WHERE userID = {}".format(session["userID"]))
             count = cursor.fetchone()
-            cursor.execute("SELECT COUNT(1) FROM Book WHERE bookID = {}".format(currentBookID))
-            bookExist = cursor.fetchone()[0]
             if count:
                 amount = count[0]
             else:
                 amount = 0
-            if exist == 0 and numBorrowed < 4 and amount == 0 and bookExist:
+
+            # check if bookID exists in book entity
+            cursor.execute("SELECT COUNT(1) FROM Book WHERE bookID = {}".format(currentBookID))
+            bookExist = cursor.fetchone()[0]
+            # need to check if book is being reserved
+            cursor.execute("SELECT userID FROM Reserved WHERE bookID = {}".format(currentBookID))
+            reserve_user_data = cursor.fetchall()
+            if reserve_user_data:
+                reserve_user = str(reserve_user_data[0][0])
+            else:
+                reserve_user = ""
+
+            if exist == 0 and numBorrowed < 4 and amount == 0 and bookExist and (reserve_user == "" or reserve_user == session["userID"]):
                 dueDate = now + timedelta(days=28)
                 dueDate_formatted = dueDate.strftime('%Y-%m-%d')
                 now_formatted = now.strftime('%Y-%m-%d')
                 # insert row into Borrowed
-                cursor.execute("INSERT into Borrowed VALUES ({}, {}, '{}', '{}')".format(currentBookID, session["userID"], now_formatted, dueDate_formatted))
+                cursor.execute("INSERT INTO Borrowed VALUES ({}, {}, '{}', '{}')".format(currentBookID, session["userID"], now_formatted, dueDate_formatted))
+                cursor.execute("DELETE FROM Reserved WHERE bookID = {}".format(currentBookID))
             elif bookExist == 0:
                 flash("Error Borrowing book, book does not exist.")
-            elif exist != 0:
-                flash("Error Borrowing book, book is already being borrowed.")
             elif amount > 0:
                 flash("Error Borrowing book, you have an outstanding fine.")
             elif numBorrowed >= 4:
                 flash("Error Borrowing book, you have borrowed a maximum of 4 books.")
-
-        
+            elif reserve_user != "":
+                flash("Error Borrowing book, book is reserved by another user.")
+            elif exist != 0:
+                flash("Error Borrowing book, book is already borrowed by another user.")
+    
         elif action == "Reserve":
             # check if book is reserved
             cursor.execute("SELECT COUNT(1) FROM Reserved WHERE bookID = {}".format(currentBookID))
@@ -327,23 +336,33 @@ def manage():
             # check existing fines
             cursor.execute("SELECT amount FROM Fine WHERE userID = {}".format(session["userID"]))
             count = cursor.fetchone()
-            cursor.execute("SELECT COUNT(1) FROM Book WHERE bookID = {}".format(currentBookID))
-            bookExist = cursor.fetchone()[0]
             if count:
                 amount = count[0]
             else:
                 amount = 0
-            if exist == 0 and amount == 0 and bookExist > 0:
+            # check if the bookID exists in book entity
+            cursor.execute("SELECT COUNT(1) FROM Book WHERE bookID = {}".format(currentBookID))
+            bookExist = cursor.fetchone()[0]
+            # need to check if the book is already borrowed by the same user
+            cursor.execute("SELECT userID FROM Borrowed WHERE bookID = {}".format(currentBookID))
+            borrow_user_data = cursor.fetchall()
+            if borrow_user_data:
+                borrow_user = str(borrow_user_data[0][0])
+            else:
+                borrow_user = ""           
+
+            if exist == 0 and amount == 0 and bookExist > 0 and borrow_user != session["userID"]:
                 currDate = date.today().strftime('%Y-%m-%d')
                 # insert row into Reserved
                 cursor.execute("INSERT into Reserved values ({}, {}, '{}')".format(currentBookID, session["userID"], currDate))
             elif bookExist == 0:
                 flash("Error Reserving book, book does not exist.")
-            elif exist != 0:
-                flash("Error Reserving book, book is already being reserved.")
+            elif borrow_user == session["userID"]:
+                flash("Error Reserving book, you have already borrowed this book.")
             elif amount > 0:
                 flash("Error Reserving book, you have an outstanding fine.")
-            
+            elif exist != 0:
+                flash("Error Reserving book, book is already being reserved.")
 
         connection.commit()
 
@@ -404,6 +423,8 @@ def manage():
 
 @app.route("/Payment.html", methods=["POST", "GET"])
 def payment():
+    if len(session) == 0:
+        return redirect(url_for('login'))
     # check if it is an admin who is logged in
     cursor.execute("SELECT COUNT(1) FROM user WHERE userID = {}".format(session["userID"]))
     count = cursor.fetchone()[0]
