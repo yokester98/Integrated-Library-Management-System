@@ -204,8 +204,9 @@ def manage():
             sql_getReserved_query = "SELECT userID FROM Reserved WHERE bookID = {}".format(currentBookID)
             cursor.execute(sql_getReserved_query)
             reservedBookRecord = cursor.fetchall()
-
-            if action == "Convert":
+            if len(reservedBookRecord) == 0:
+                flash("No such book reserved")
+            elif action == "Convert":
                 cursor.execute("SELECT COUNT(1) FROM borrowed WHERE bookID = {}".format(currentBookID))
                 count = cursor.fetchone()[0]
                 # check existing fines
@@ -215,13 +216,18 @@ def manage():
                     amount = finecount[0]
                 else:
                     amount = 0
-                if amount > 0 or count:
+                
+                if count:
+                    flash("Error Converting Reserved book to Borrowed, you did not reserve this book.")
+                elif amount > 0:
                     # insert error message here
-                    print("Error Converting Reserved book to Borrowed")
+                    flash("Error Converting Reserved book to Borrowed, you have an outstanding fine.")
                 else:
                     cursor.execute("SELECT COUNT(*) FROM borrowed WHERE userID = {}".format(session["userID"]))  #need to add global user here
                     count = cursor.fetchone()[0]
-                    if reservedBookRecord[0][0] == 2 and count < 4:
+                    if count >= 4:
+                        flash("Error Converting Reserved book to Borrowed, you have borrowed a maximum of 4 books.")
+                    elif reservedBookRecord[0][0] == 2 and count < 4:
                         dueDate = now.date() + timedelta(days=28)
                         formatted_date = dueDate.strftime('%Y-%m-%d')
                         sql_updateBorrowed_query = "INSERT INTO borrowed VALUES ({}, {}, '{}', '{}')".format(currentBookID, session["userID"], formatted_now, formatted_date) #need to add global user here
@@ -231,7 +237,7 @@ def manage():
 
             elif action == "Cancel":
                 if len(reservedBookRecord) == 0:
-                    print("Reserved Book not found")
+                    flash("Error Cancelling Reserved book, you did not reserve this book.")
                 else:
                     if reservedBookRecord[0][0] == int(session["userID"]):   #need to add global user here
                         sql_updateReserved_query = "DELETE FROM reserved WHERE bookID = {}".format(currentBookID)
@@ -241,8 +247,9 @@ def manage():
             sql_getBorrowedBook_query = "SELECT bookID, userID, borrowDate, dueDate FROM borrowed WHERE bookID = {}".format(currentBookID)
             cursor.execute(sql_getBorrowedBook_query)
             borrowedBookRecord = cursor.fetchall()
-
-            if action == "Extend" and borrowedBookRecord[0][1] == int(session["userID"]):  #need to add global user here
+            if len(borrowedBookRecord) == 0:
+                flash("No such book borrowed")
+            elif action == "Extend" and borrowedBookRecord[0][1] == int(session["userID"]):  #need to add global user here
                 cursor.execute("SELECT COUNT(1) FROM reserved WHERE bookID = {}".format(currentBookID))
                 count = cursor.fetchone()[0]
                 # check existing fines
@@ -253,11 +260,12 @@ def manage():
                 else:
                     amount = 0
                 # Check if the current book is already being reserved
-                if amount > 0 or count:
+                if amount > 0:
                     # insert error message here
-                    print("Error Extending Borrowed book")
+                    flash("Error Extending Borrowed book, you have an outstanding fine.")
+                elif count:
+                    flash("Error Extending Borrowed book, another user has made a reservation.")
                 else:
-                    print("Extended borrowed book")
                     dueDate = now + timedelta(days=28)
                     formatted_date = dueDate.strftime('%Y-%m-%d')
                     sql_updateBorrowed_query = "UPDATE borrowed SET dueDate = '{}' WHERE bookID = {}".format(formatted_date, currentBookID)
@@ -265,7 +273,6 @@ def manage():
 
             elif action == "Return":
                 if borrowedBookRecord[0][1] == int(session["userID"]): #need to add global user here
-                    print("Returned borrowed book")
                     dueDate = borrowedBookRecord[0][3]
                     delta = now.date() - dueDate
                     if delta.days > 0:
@@ -291,16 +298,27 @@ def manage():
             # check existing fines
             cursor.execute("SELECT amount FROM Fine WHERE userID = {}".format(session["userID"]))
             count = cursor.fetchone()
+            cursor.execute("SELECT COUNT(1) FROM Book WHERE bookID = {}".format(currentBookID))
+            bookExist = cursor.fetchone()[0]
             if count:
                 amount = count[0]
             else:
                 amount = 0
-            if exist == 0 and numBorrowed < 4 and amount == 0:
+            if exist == 0 and numBorrowed < 4 and amount == 0 and bookExist:
                 dueDate = now + timedelta(days=28)
                 dueDate_formatted = dueDate.strftime('%Y-%m-%d')
                 now_formatted = now.strftime('%Y-%m-%d')
                 # insert row into Borrowed
                 cursor.execute("INSERT into Borrowed VALUES ({}, {}, '{}', '{}')".format(currentBookID, session["userID"], now_formatted, dueDate_formatted))
+            elif bookExist == 0:
+                flash("Error Borrowing book, book does not exist.")
+            elif exist != 0:
+                flash("Error Borrowing book, book is already being borrowed.")
+            elif amount > 0:
+                flash("Error Borrowing book, you have an outstanding fine.")
+            elif numBorrowed >= 4:
+                flash("Error Borrowing book, you have borrowed a maximum of 4 books.")
+
         
         elif action == "Reserve":
             # check if book is reserved
@@ -309,14 +327,23 @@ def manage():
             # check existing fines
             cursor.execute("SELECT amount FROM Fine WHERE userID = {}".format(session["userID"]))
             count = cursor.fetchone()
+            cursor.execute("SELECT COUNT(1) FROM Book WHERE bookID = {}".format(currentBookID))
+            bookExist = cursor.fetchone()[0]
             if count:
                 amount = count[0]
             else:
                 amount = 0
-            if exist == 0 and amount == 0:
+            if exist == 0 and amount == 0 and bookExist > 0:
                 currDate = date.today().strftime('%Y-%m-%d')
                 # insert row into Reserved
                 cursor.execute("INSERT into Reserved values ({}, {}, '{}')".format(currentBookID, session["userID"], currDate))
+            elif bookExist == 0:
+                flash("Error Reserving book, book does not exist.")
+            elif exist != 0:
+                flash("Error Reserving book, book is already being reserved.")
+            elif amount > 0:
+                flash("Error Reserving book, you have an outstanding fine.")
+            
 
         connection.commit()
 

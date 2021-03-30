@@ -129,6 +129,9 @@
               <button type="submit" value="submit" class="u-btn u-btn-submit u-button-style u-custom-color-1 u-btn-1">
                 Submit
               </button>
+              {% for message in get_flashed_messages() %}
+                <p>{{ message }}</p>
+              {% endfor %}
             </div>
           </form>
         </div>
