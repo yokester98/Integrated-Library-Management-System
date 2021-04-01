@@ -227,7 +227,7 @@ def manage():
                     count = cursor.fetchone()[0]
                     if count >= 4:
                         flash("Error Converting Reserved book to Borrowed, you have borrowed a maximum of 4 books.")
-                    elif reservedBookRecord[0][0] == 2 and count < 4:
+                    elif reservedBookRecord[0][0] == int(session["userID"]) and count < 4:
                         dueDate = now.date() + timedelta(days=28)
                         formatted_date = dueDate.strftime('%Y-%m-%d')
                         sql_updateBorrowed_query = "INSERT INTO borrowed VALUES ({}, {}, '{}', '{}')".format(currentBookID, session["userID"], formatted_now, formatted_date) #need to add global user here
